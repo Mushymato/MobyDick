@@ -14,7 +14,7 @@
           "Name": "Shork",
           "DisplayName": "Shork",
           "Description": "The shorkiest shork.",
-          "Edibility": -100,
+          "Edibility": 100,
           "Type": "Fish",
           "Category": -4,
           "Price": 1000,

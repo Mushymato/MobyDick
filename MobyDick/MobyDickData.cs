@@ -25,6 +25,7 @@ public sealed class MobyDickData
 {
     public Point SpriteSize { get; set; } = Point.Zero;
     public bool RotateByVelocity { get; set; } = false;
+    public int WiggleSegmentLength { get; set; } = 0;
 
     internal string? Key { get; set; } = null;
     internal AquariumFishData? AquariumFish { get; set; } = null;

@@ -8,7 +8,8 @@
           "SpriteSize": {
             "X": 48,
             "Y": 32
-          }
+          },
+          "WiggleSegmentLength": 8
         }
       }
     }

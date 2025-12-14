@@ -1,16 +1,21 @@
+using HarmonyLib;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Netcode;
+using StardewModdingAPI;
+using StardewModdingAPI.Events;
+using StardewValley;
+using StardewValley.Characters;
+using StardewValley.ItemTypeDefinitions;
+using StardewValley.Objects;
+using StardewValley.Tools;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using HarmonyLib;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using StardewModdingAPI;
-using StardewModdingAPI.Events;
-using StardewValley;
-using StardewValley.ItemTypeDefinitions;
-using StardewValley.Objects;
-using StardewValley.Tools;
+using System.Runtime.ConstrainedExecution;
+using static HarmonyLib.Code;
 using static StardewValley.Objects.TankFish;
 
 namespace MobyDick;
@@ -98,6 +103,10 @@ internal static class FishPatches
                     priority = Priority.Last,
                 }
             );
+            harmony.Patch(
+                original: AccessTools.DeclaredMethod(typeof(Furniture), nameof(Furniture.draw)),
+                transpiler: new HarmonyMethod(typeof(FishPatches), nameof(Furniture_draw_Transpiler))
+            );
         }
         catch (Exception err)
         {
@@ -126,6 +135,71 @@ internal static class FishPatches
         }
 
         helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
+    }
+
+    private static IEnumerable<CodeInstruction> Furniture_draw_Transpiler(
+        IEnumerable<CodeInstruction> instructions,
+        ILGenerator generator
+    )
+    {
+        CodeMatcher matcher = new(instructions, generator);
+
+        CodeMatch inst = new(OpCodes.Ldfld, AccessTools.Field(typeof(Furniture), nameof(Furniture.isOn)));
+
+        ModEntry.Log("\n" + inst.ToString());
+
+        inst.ToString();
+        // IL_075a: ldarg.0
+        // IL_075b: ldfld class Netcode.NetBool StardewValley.Object::isOn
+        // IL_0760: callvirt instance !0 class Netcode.NetFieldBase`2<bool, class Netcode.NetBool>::get_Value
+        // IL_0765: brfalse.s IL_0778
+
+        matcher.MatchStartForward(
+            [
+            new(OpCodes.Ldarg_0),
+            new(OpCodes.Ldfld, AccessTools.Field(typeof(SObject), nameof(SObject.isOn))),
+            new(OpCodes.Callvirt, AccessTools.Method(typeof(NetBool), nameof(NetBool.Value))),
+            new(OpCodes.Brfalse)
+            ]
+        ).ThrowIfNotMatch("if (this.IsOn.Value...");
+
+        matcher.CreateLabel(out Label AfterHeldObject);
+        // IL_0476: ldarg.0
+        // IL_0477: ldfld class Netcode.NetRef`1<class StardewValley.Object> StardewValley.Object::heldObject
+        // IL_047c: callvirt instance !0 class Netcode.NetFieldBase`2<class StardewValley.Object, class Netcode.NetRef`1<class StardewValley.Object>>::get_Value()
+        // IL_0488: brfalse IL_075a
+
+        matcher.MatchEndBackwards(
+            [
+            new(OpCodes.Ldarg_0),
+            new(OpCodes.Ldfld, AccessTools.Field(typeof(SObject), nameof(SObject.heldObject))),
+            new(OpCodes.Callvirt),
+            new(OpCodes.Brfalse),
+            ]
+        ).ThrowIfNotMatch("if (this.heldObject.Value == null)");
+
+        matcher.Advance(1)
+        .InsertAndAdvance(
+            [
+            new(OpCodes.Ldarg_0),
+            new(OpCodes.Ldarg_1),
+            new(OpCodes.Call, AccessTools.DeclaredMethod(typeof(FishPatches), nameof(Furniture_checkHeldItemAndDraw))),
+            new(OpCodes.Brtrue, AfterHeldObject)
+            ]
+        );
+
+        return matcher.Instructions();
+    }
+
+    private static bool Furniture_checkHeldItemAndDraw(Furniture furniture, SpriteBatch spriteBatch)
+    {
+        if (TryGetMBData(furniture.heldObject.Value.ItemId, out MobyDickData? data, out AquariumFishData? sqf))
+        {
+            //spriteBatch.Draw(heldItemData.GetTexture(), Game1.GlobalToLocal(Game1.viewport, new Vector2(base.boundingBox.Center.X - 32, base.boundingBox.Center.Y - (this.drawHeldObjectLow.Value ? 32 : 85))), heldItemData.GetSourceRect(), Color.White * alpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, (float)(base.boundingBox.Bottom + 1) / 10000f);
+            spriteBatch.Draw(sqf.Texture, Game1.GlobalToLocal(Game1.viewport, new Vector2(furniture.boundingBox.Center.X - data.SpriteSize.X * 2, furniture.boundingBox.Center.Y - data.SpriteSize.Y * 2 - (furniture.drawHeldObjectLow.Value ? 0 : 53))), data.GetAquariumSourceRect(), Color.White, 0f, Vector2.Zero, 4f, SpriteEffects.None, (float)(furniture.boundingBox.Bottom + 1) / 10000f);
+            return true;
+        }
+        return false;
     }
 
     private static bool SObject_drawWhenHeld_Prefix(

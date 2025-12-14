@@ -1,0 +1,17 @@
+{
+  "Name": "[🦈] Shork",
+  "Author": "debug",
+  "Version": "1.0.0",
+  "Description": "large fish",
+  "UniqueID": "debug.Shork",
+  "MinimumApiVersion": "4.3.0",
+  "UpdateKeys": [],
+  "ContentPackFor": {
+    "UniqueID": "Pathoschild.ContentPatcher"
+  },
+  "Dependencies": [
+    {
+      "UniqueID": "mushymato.MobyDick"
+    }
+  ]
+}

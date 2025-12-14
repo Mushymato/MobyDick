@@ -1,0 +1,16 @@
+{
+  "Changes": [
+    {
+      "Action": "EditData",
+      "Target": "mushymato.MobyDick/Data",
+      "Entries": {
+        "{{ModId}}_shork": {
+          "SpriteSize": {
+            "X": 48,
+            "Y": 32
+          }
+        }
+      }
+    }
+  ]
+}

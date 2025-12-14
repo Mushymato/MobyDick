@@ -1,0 +1,83 @@
+{
+  "$schema": "https://smapi.io/schemas/content-patcher.json",
+  "Changes": [
+    {
+      "Action": "Load",
+      "Target": "{{ModId}}\\shork,{{ModId}}\\shorkitem",
+      "FromFile": "assets/{{TargetWithoutPath}}.png"
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Objects",
+      "Entries": {
+        "{{ModId}}_shork": {
+          "Name": "Shork",
+          "DisplayName": "Shork",
+          "Description": "The shorkiest shork.",
+          "Edibility": -100,
+          "Type": "Fish",
+          "Category": -4,
+          "Price": 1000,
+          "Texture": "{{ModId}}\\shorkitem",
+          "SpriteIndex": 0,
+          "ContextTags": [
+            "fish_talk_carnivorous",
+            "fish_pond_ignore"
+          ]
+        },
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Fish",
+      "Entries": {
+        "{{ModId}}_shork": "{{ModId}}_shork/50/mixed/11/30/600 2400/spring summer fall winter/both/685 .9/5/.9/.9/0/true",
+      },
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Locations",
+      "TargetField": [
+        "Beach"
+      ],
+      "Entries": {
+        "Fish": [
+          {
+            "Chance": 1.0,
+            "Id": "{{ModId}}_shork.beach",
+            "ItemId": "{{ModId}}_shork",
+          }
+        ]
+      },
+    },
+    // {
+    //   "Action": "EditData",
+    //   "Target": "Data/Locations",
+    //   "TargetField": [
+    //     "Beach",
+    //     "Fish"
+    //   ],
+    //   "Entries": {
+    //     "{{ModId}}_shork.beach": {
+    //       "Chance": 1.0,
+    //       "Id": "{{ModId}}_shork.beach",
+    //       "ItemId": "{{ModId}}_shork",
+    //     }
+    //   },
+    //   "MoveEntries": [
+    //     {
+    //       "ID": "{{ModId}}_shork.beach",
+    //       "ToPosition": "Top"
+    //     }
+    //   ]
+    // },
+    {
+      "LogName": "Aquarium data",
+      "Action": "EditData",
+      "Target": "Data/AquariumFish",
+      "Entries": {
+        "{{ModId}}_shork": "0/fish/////{{ModId}}\\shork",
+      }
+    },
+  ]
+}

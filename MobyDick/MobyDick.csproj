@@ -15,7 +15,7 @@
   <PropertyGroup>
     <Name>MobyDick</Name>
     <Authors>mushymato</Authors>
-    <Description>DESCRIPTION</Description>
+    <Description>What is man that he should chase a whale?</Description>
     <UniqueId>mushymato.MobyDick</UniqueId>
     <UpdateKeys>Nexus:???,GitHub:Mushymato/MobyDick</UpdateKeys>
     <Version>0.1.0</Version>

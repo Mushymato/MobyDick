@@ -10,6 +10,13 @@
             "Y": 32
           },
           "WiggleSegmentLength": 8
+        },
+        "{{ModId}}_whiteshark": {
+          "SpriteSize": {
+            "X": 64,
+            "Y": 32
+          },
+          "WiggleSegmentLength": 0
         }
       }
     }

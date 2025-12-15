@@ -3,7 +3,7 @@
   "Changes": [
     {
       "Action": "Load",
-      "Target": "{{ModId}}\\shork,{{ModId}}\\shorkitem",
+      "Target": "{{ModId}}\\shork,{{ModId}}\\shorkitem,{{ModId}}\\whiteshark,{{ModId}}\\whitesharkitem",
       "FromFile": "assets/{{TargetWithoutPath}}.png"
     },
     {
@@ -25,6 +25,21 @@
             "fish_pond_ignore"
           ]
         },
+        "{{ModId}}_whiteshark": {
+          "Name": "White Shark",
+          "DisplayName": "White Shark",
+          "Description": "The whitey shork.",
+          "Edibility": 150,
+          "Type": "Fish",
+          "Category": -4,
+          "Price": 1000,
+          "Texture": "{{ModId}}\\whitesharkitem",
+          "SpriteIndex": 0,
+          "ContextTags": [
+            "fish_talk_carnivorous",
+            "fish_pond_ignore"
+          ]
+        },
       }
     },
     {
@@ -32,6 +47,7 @@
       "Target": "Data/Fish",
       "Entries": {
         "{{ModId}}_shork": "{{ModId}}_shork/50/mixed/11/30/600 2400/spring summer fall winter/both/685 .9/5/.9/.9/0/true",
+        "{{ModId}}_whiteshark": "{{ModId}}_shork/50/mixed/11/30/600 2400/spring summer fall winter/both/685 .9/5/.9/.9/0/true",
       },
     },
     {
@@ -45,7 +61,10 @@
           {
             "Chance": 1.0,
             "Id": "{{ModId}}_shork.beach",
-            "ItemId": "{{ModId}}_shork",
+            "RandomItemId": [
+              "{{ModId}}_shork",
+              "{{ModId}}_whiteshark"
+            ],
           }
         ]
       },
@@ -77,6 +96,7 @@
       "Target": "Data/AquariumFish",
       "Entries": {
         "{{ModId}}_shork": "0/fish/////{{ModId}}\\shork",
+        "{{ModId}}_whiteshark": "0/fish/0 0 1 1 2 2 3 3 4 4////{{ModId}}\\whiteshark",
       }
     },
   ]

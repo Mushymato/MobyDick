@@ -17,7 +17,15 @@
             "Y": 32
           },
           "WiggleSegmentLength": 0
-        }
+        },
+        "142": {
+          "SpriteSize": {
+            "X": 48,
+            "Y": 32
+          },
+          "WiggleSegmentLength": 8,
+          "AquariumTextureOverride": "{{ModId}}\\shork"
+        },
       }
     }
   ]

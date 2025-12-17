@@ -1,6 +1,8 @@
 global using SObject = StardewValley.Object;
 using System.Diagnostics;
+using Microsoft.Xna.Framework;
 using StardewModdingAPI;
+using StardewValley;
 
 namespace MobyDick;
 
@@ -19,6 +21,7 @@ public sealed class ModEntry : Mod
     {
         mon = Monitor;
         AssetManager.Register(helper);
+        GameDelegates.Register(helper);
         FishPatches.Patch(helper);
     }
 

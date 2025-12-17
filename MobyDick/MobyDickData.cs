@@ -17,15 +17,27 @@ internal sealed record AquariumFishData(
     string? HatPosition = null
 )
 {
-    internal bool IsErrorFish => TextureName != null && !Game1.content.DoesAssetExist<Texture2D>(TextureName);
-    internal Texture2D Texture => IsErrorFish ? Game1.mouseCursors : Game1.content.Load<Texture2D>(TextureName);
+    internal bool IsErrorFish =>
+        string.IsNullOrEmpty(TextureName) || !Game1.content.DoesAssetExist<Texture2D>(TextureName);
+
+    internal Texture2D GetGetTexture()
+    {
+        if (IsErrorFish)
+            return Game1.content.Load<Texture2D>("LooseSprites\\AquariumFish");
+        return Game1.content.Load<Texture2D>(TextureName);
+    }
 };
 
 public sealed class MobyDickData
 {
+    #region content_pack
     public Point SpriteSize { get; set; } = Point.Zero;
     public bool RotateByVelocity { get; set; } = false;
     public int WiggleSegmentLength { get; set; } = 0;
+    public float DrawScaleInTank { get; set; } = 4f;
+    public Vector2 DrawOriginOffset { get; set; } = Vector2.Zero;
+    public string? AquariumTextureOverride { get; set; } = null;
+    #endregion
 
     internal string? Key { get; set; } = null;
     internal AquariumFishData? AquariumFish { get; set; } = null;
@@ -36,7 +48,7 @@ public sealed class MobyDickData
         {
             return new(0, 0, 16, 16);
         }
-        texture ??= AquariumFish.Texture;
+        texture ??= AquariumFish.GetGetTexture();
         currentFrame = currentFrame == -1 ? AquariumFish.FishIndex : currentFrame;
         int framePerRow = texture.Width / SpriteSize.X;
         int x = currentFrame % framePerRow * SpriteSize.X;
@@ -71,9 +83,20 @@ public sealed class MobyDickData
         }
         Key = key;
         string[] tankFishParts = tankFishStr.Split('/');
-        string tankFishTxName = ArgUtility.Get(tankFishParts, 6);
+        int sourceIdx;
+        string tankFishTxName;
+        if (string.IsNullOrEmpty(AquariumTextureOverride))
+        {
+            sourceIdx = ArgUtility.GetInt(tankFishParts, 0, 0);
+            tankFishTxName = ArgUtility.Get(tankFishParts, 6);
+        }
+        else
+        {
+            sourceIdx = 0;
+            tankFishTxName = AquariumTextureOverride;
+        }
         AquariumFish = new(
-            ArgUtility.GetInt(tankFishParts, 0, 0),
+            sourceIdx,
             ArgUtility.Get(tankFishParts, 1) ?? "float",
             ParseAnimation(ArgUtility.Get(tankFishParts, 2)),
             ParseAnimation(ArgUtility.Get(tankFishParts, 3)),

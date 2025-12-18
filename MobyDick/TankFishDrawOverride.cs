@@ -18,6 +18,8 @@ internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data)
     }
 
     private Vector2 origin = new Vector2(Data.SpriteSize.X / 2f, Data.SpriteSize.Y / 2f) + Data.DrawOriginOffset;
+    public double currentFrameTime = 0f;
+    private int currentAnimationFrame = Data.SwimAnimation?.Count > 0 ? 0 : -1;
 
     internal void Draw(Texture2D texture, SpriteBatch b, float alpha, float draw_layer)
     {
@@ -29,7 +31,10 @@ internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data)
                 Math.Sin(Game1.currentGameTime.TotalGameTime.TotalSeconds * 1.25 + (double)(Fish.position.X / 32f))
                 * 2f,
         };
-        Rectangle sourceRect = Data.GetAquariumSourceRect(Fish.currentFrame, texture);
+        Rectangle sourceRect = Data.GetAquariumSourceRect(
+            currentAnimationFrame > -1 ? Data.SwimAnimation![currentAnimationFrame] : Fish.currentFrame,
+            texture
+        );
 
         Vector2 drawPos = Fish.GetWorldPosition();
         if (heightVariance > 0)
@@ -124,5 +129,21 @@ internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data)
             (int)size.X,
             (int)size.Y
         );
+    }
+
+    internal void Update(GameTime time)
+    {
+        if (currentAnimationFrame < 0)
+            return;
+        float frameLen = Data.SwimAnimationInterval;
+        currentFrameTime += time.ElapsedGameTime.TotalMilliseconds * Fish.velocity.Length() / 1f;
+        if (currentFrameTime <= frameLen)
+            return;
+        currentAnimationFrame += (int)(currentFrameTime / frameLen);
+        currentFrameTime %= frameLen;
+        if (currentAnimationFrame >= Data.SwimAnimation!.Count)
+        {
+            currentAnimationFrame %= Data.SwimAnimation.Count;
+        }
     }
 }

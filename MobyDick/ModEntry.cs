@@ -1,8 +1,6 @@
 global using SObject = StardewValley.Object;
 using System.Diagnostics;
-using Microsoft.Xna.Framework;
 using StardewModdingAPI;
-using StardewValley;
 
 namespace MobyDick;
 

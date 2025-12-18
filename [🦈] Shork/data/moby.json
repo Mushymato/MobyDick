@@ -16,7 +16,15 @@
             "X": 64,
             "Y": 32
           },
-          "WiggleSegmentLength": 0
+          "WiggleSegmentLength": 0,
+          "SwimAnimation": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "SwimAnimationInterval": 125
         },
         "142": {
           "SpriteSize": {
@@ -24,7 +32,13 @@
             "Y": 32
           },
           "WiggleSegmentLength": 8,
-          "AquariumTextureOverride": "{{ModId}}\\shork"
+          "AquariumTextureOverride": "{{ModId}}\\sharp",
+          "AquariumTextureRect": {
+            "X": 0,
+            "Y": 32,
+            "Width": 48,
+            "Height": 32
+          }
         },
       }
     }

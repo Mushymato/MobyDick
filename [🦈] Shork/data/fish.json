@@ -3,7 +3,7 @@
   "Changes": [
     {
       "Action": "Load",
-      "Target": "{{ModId}}\\shork,{{ModId}}\\shorkitem,{{ModId}}\\whiteshark,{{ModId}}\\whitesharkitem",
+      "Target": "{{ModId}}\\shork,{{ModId}}\\shorkitem,{{ModId}}\\whiteshark,{{ModId}}\\whitesharkitem,{{ModId}}\\sharp",
       "FromFile": "assets/{{TargetWithoutPath}}.png"
     },
     {
@@ -96,7 +96,7 @@
       "Target": "Data/AquariumFish",
       "Entries": {
         "{{ModId}}_shork": "0/fish/////{{ModId}}\\shork",
-        "{{ModId}}_whiteshark": "0/fish/0 0 1 1 2 2 3 3 4 4////{{ModId}}\\whiteshark",
+        "{{ModId}}_whiteshark": "0/fish/////{{ModId}}\\whiteshark",
       }
     },
   ]

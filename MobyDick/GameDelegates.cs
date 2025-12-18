@@ -21,7 +21,7 @@ internal static class GameDelegates
 
     private static bool DoFishFrenzy(string[] args, TriggerActionContext context, out string error)
     {
-        // debug action mushymato.MobyDick_FishFrenzy (O)debug.Shork_shork 45 15
+        // debug action mushymato.MobyDick_FishFrenzy Here (O)debug.Shork_shork 45 15
         if (!Context.IsWorldReady || Game1.currentLocation is not GameLocation location)
         {
             error = "Null location";

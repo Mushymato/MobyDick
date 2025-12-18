@@ -348,7 +348,7 @@ internal static class FishPatches
             Rectangle sourceRect = data.GetAquariumSourceRect();
             Vector2 origin = new(sourceRect.Width / 2, sourceRect.Height / 2);
             spriteBatch.Draw(
-                aqf.GetGetTexture(),
+                aqf.GetTexture(),
                 Game1.GlobalToLocal(
                     Game1.viewport,
                     new Vector2(
@@ -400,7 +400,7 @@ internal static class FishPatches
         Vector2 globalPosition =
             ___position + new Vector2(0f, (float)Math.Sin((double)(____age / ___jumpTime) * Math.PI) * -___jumpHeight);
         b.Draw(
-            aqf.GetGetTexture(),
+            aqf.GetTexture(),
             Game1.GlobalToLocal(Game1.viewport, globalPosition),
             sourceRect,
             Color.White,
@@ -440,7 +440,7 @@ internal static class FishPatches
         float originW = MathF.Min(sourceRect.Width, sourceRect.Height) / 2;
         Vector2 origin = new(originW, originW);
         spriteBatch.Draw(
-            aqf.GetGetTexture(),
+            aqf.GetTexture(),
             new(objectPosition.X - Math.Sign(f.rotation) * 8, objectPosition.Y + (sourceRect.Height - 16) * 2f),
             sourceRect,
             Color.White,
@@ -606,7 +606,7 @@ internal static class FishPatches
         )
             return;
 
-        Texture2D tankFishTx = aqf.GetGetTexture();
+        Texture2D tankFishTx = aqf.GetTexture();
 
         foreach (TemporaryAnimatedSprite anim in __instance.TemporarySprites.Reverse())
         {
@@ -636,7 +636,7 @@ internal static class FishPatches
         if (!TryGetMBData(who.itemToEat.ItemId, out MobyDickData? data, out AquariumFishData? aqf))
             return;
 
-        Texture2D tankFishTx = aqf.GetGetTexture();
+        Texture2D tankFishTx = aqf.GetTexture();
         ParsedItemData parsedOrErrorData = ItemRegistry.GetData(who.itemToEat.QualifiedItemId);
         for (int i = __state; i < who.currentLocation.temporarySprites.Count; i++)
         {
@@ -652,7 +652,7 @@ internal static class FishPatches
         if (!TryGetMBData(___whichFish.LocalItemId, out MobyDickData? data, out AquariumFishData? aqf))
             return;
 
-        Texture2D tankFishTx = aqf.GetGetTexture();
+        Texture2D tankFishTx = aqf.GetTexture();
         ParsedItemData parsedOrErrorData = ___whichFish.GetParsedOrErrorData();
         foreach (TemporaryAnimatedSprite anim in __instance.animations)
         {
@@ -660,7 +660,7 @@ internal static class FishPatches
         }
     }
 
-    private static void TankFish_Update_Postfix(TankFish __instance, FishTankFurniture ____tank)
+    private static void TankFish_Update_Postfix(TankFish __instance, FishTankFurniture ____tank, GameTime time)
     {
         if (GetTankFishDrawOverride(__instance) is not TankFishDrawOverride drawOverride)
         {
@@ -672,6 +672,7 @@ internal static class FishPatches
                 __instance.velocity.X = 0;
             __instance.facingLeft = false;
         }
+        drawOverride.Update(time);
     }
 
     private static void TankFish_GetBounds_Postfix(
@@ -787,6 +788,11 @@ internal static class FishPatches
         TankFishDrawOverrides.GetValue(fish, TankFishDrawOverride.Create);
 
     private static void OnReturnedToTitle(object? sender, ReturnedToTitleEventArgs e)
+    {
+        ClearTankFishDrawOverrides();
+    }
+
+    internal static void ClearTankFishDrawOverrides()
     {
         TankFishDrawOverrides.Clear();
     }

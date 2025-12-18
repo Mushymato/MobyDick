@@ -20,7 +20,7 @@ internal sealed record AquariumFishData(
     internal bool IsErrorFish =>
         string.IsNullOrEmpty(TextureName) || !Game1.content.DoesAssetExist<Texture2D>(TextureName);
 
-    internal Texture2D GetGetTexture()
+    internal Texture2D GetTexture()
     {
         if (IsErrorFish)
             return Game1.content.Load<Texture2D>("LooseSprites\\AquariumFish");
@@ -37,6 +37,9 @@ public sealed class MobyDickData
     public float DrawScaleInTank { get; set; } = 4f;
     public Vector2 DrawOriginOffset { get; set; } = Vector2.Zero;
     public string? AquariumTextureOverride { get; set; } = null;
+    public Rectangle AquariumTextureRect { get; set; } = Rectangle.Empty;
+    public List<int>? SwimAnimation { get; set; } = null;
+    public float SwimAnimationInterval { get; set; } = 125f;
     #endregion
 
     internal string? Key { get; set; } = null;
@@ -48,11 +51,11 @@ public sealed class MobyDickData
         {
             return new(0, 0, 16, 16);
         }
-        texture ??= AquariumFish.GetGetTexture();
+        texture ??= AquariumFish.GetTexture();
         currentFrame = currentFrame == -1 ? AquariumFish.FishIndex : currentFrame;
-        int framePerRow = texture.Width / SpriteSize.X;
-        int x = currentFrame % framePerRow * SpriteSize.X;
-        int y = currentFrame / framePerRow * SpriteSize.Y;
+        int framePerRow = (AquariumTextureRect.Width > 0 ? AquariumTextureRect.Width : texture.Width) / SpriteSize.X;
+        int x = currentFrame % framePerRow * SpriteSize.X + AquariumTextureRect.X;
+        int y = currentFrame / framePerRow * SpriteSize.Y + AquariumTextureRect.Y;
         return new(x, y, SpriteSize.X, SpriteSize.Y);
     }
 
@@ -150,6 +153,7 @@ internal static class AssetManager
         }
         else if (e.NamesWithoutLocale.Any(name => name.IsEquivalentTo("Data\\AquariumFish")) && mbData != null)
         {
+            FishPatches.ClearTankFishDrawOverrides();
             DelayedAction.functionAfterDelay(
                 () =>
                 {

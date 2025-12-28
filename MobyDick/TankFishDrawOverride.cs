@@ -17,12 +17,13 @@ internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data)
         return null;
     }
 
-    private Vector2 origin = new Vector2(Data.SpriteSize.X / 2f, Data.SpriteSize.Y / 2f) + Data.DrawOriginOffset;
+    private Vector2 origin = new Vector2(Data.SpriteSize.X / 2f, Data.SpriteSize.Y / 2f);
     public double currentFrameTime = 0f;
     private int currentAnimationFrame = Data.SwimAnimation?.Count > 0 ? 0 : -1;
 
     internal void Draw(Texture2D texture, SpriteBatch b, float alpha, float draw_layer)
     {
+        texture = Data.AquariumFish?.GetTexture() ?? texture;
         float scale = Fish.GetScale() * Data.DrawScaleInTank;
         float heightVariance = Fish.fishType switch
         {

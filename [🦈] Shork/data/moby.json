@@ -17,28 +17,17 @@
             "Y": 32
           },
           "WiggleSegmentLength": 0,
-          "SwimAnimation": [
-            0,
-            1,
-            2,
-            3,
-            4
-          ],
+          "SwimAnimation": "{{Range: 0,4}}",
           "SwimAnimationInterval": 125
         },
         "142": {
           "SpriteSize": {
-            "X": 48,
+            "X": 96,
             "Y": 32
           },
-          "WiggleSegmentLength": 8,
-          "AquariumTextureOverride": "{{ModId}}\\sharp",
-          "AquariumTextureRect": {
-            "X": 0,
-            "Y": 32,
-            "Width": 48,
-            "Height": 32
-          }
+          "WiggleSegmentLength": 0,
+          "AquariumTextureOverride": "{{ModId}}\\oarfish",
+          "SwimAnimation": "{{Range: 0,6}}",
         },
       }
     }

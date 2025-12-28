@@ -3,7 +3,7 @@
   "Changes": [
     {
       "Action": "Load",
-      "Target": "{{ModId}}\\shork,{{ModId}}\\shorkitem,{{ModId}}\\whiteshark,{{ModId}}\\whitesharkitem,{{ModId}}\\sharp",
+      "Target": "{{ModId}}\\shork,{{ModId}}\\shorkitem,{{ModId}}\\whiteshark,{{ModId}}\\whitesharkitem,{{ModId}}\\sharp,{{ModId}}\\oarfish",
       "FromFile": "assets/{{TargetWithoutPath}}.png"
     },
     {

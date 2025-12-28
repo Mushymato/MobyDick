@@ -1,5 +1,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Newtonsoft.Json;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -35,9 +36,10 @@ public sealed class MobyDickData
     public bool RotateByVelocity { get; set; } = false;
     public int WiggleSegmentLength { get; set; } = 0;
     public float DrawScaleInTank { get; set; } = 4f;
-    public Vector2 DrawOriginOffset { get; set; } = Vector2.Zero;
     public string? AquariumTextureOverride { get; set; } = null;
     public Rectangle AquariumTextureRect { get; set; } = Rectangle.Empty;
+
+    [JsonConverter(typeof(StringIntListConverter))]
     public List<int>? SwimAnimation { get; set; } = null;
     public float SwimAnimationInterval { get; set; } = 125f;
     #endregion
@@ -150,6 +152,7 @@ internal static class AssetManager
         if (e.NamesWithoutLocale.Any(name => name.IsEquivalentTo(AssetName_MobyDickData)))
         {
             mbData = null;
+            FishPatches.ClearTankFishDrawOverrides();
         }
         else if (e.NamesWithoutLocale.Any(name => name.IsEquivalentTo("Data\\AquariumFish")) && mbData != null)
         {

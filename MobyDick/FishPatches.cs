@@ -89,17 +89,39 @@ internal static class FishPatches
         )
         {
             Assembly assembly = mod.GetType().Assembly;
-            if (
-                (visibleFishCustomFish = assembly.GetType("showFishInWater.CustomFish")) is not null
-                && AccessTools.DeclaredMethod(visibleFishCustomFish, "Draw") is MethodInfo visibleFishCustomFishDraw
-            )
+            if ((visibleFishCustomFish = assembly.GetType("showFishInWater.CustomFish")) is not null)
             {
-                ModEntry.Log($"Patching VisibleFish: {visibleFishCustomFishDraw}");
-                showFishInWater_CustomFish_alpha = AccessTools.DeclaredField(visibleFishCustomFish, "alpha");
-                harmony.Patch(
-                    original: visibleFishCustomFishDraw,
-                    transpiler: new HarmonyMethod(typeof(FishPatches), nameof(TankFish_Draw_Transpiler))
-                );
+                if (AccessTools.DeclaredMethod(visibleFishCustomFish, "Draw") is MethodInfo visibleFishCustomFishDraw)
+                {
+                    ModEntry.Log($"Patching VisibleFish: {visibleFishCustomFishDraw}");
+                    showFishInWater_CustomFish_alpha = AccessTools.DeclaredField(visibleFishCustomFish, "alpha");
+                    harmony.Patch(
+                        original: AccessTools.DeclaredMethod(visibleFishCustomFish, "Draw"),
+                        transpiler: new HarmonyMethod(typeof(FishPatches), nameof(TankFish_Draw_Transpiler))
+                    );
+                }
+                if (
+                    AccessTools.DeclaredMethod(visibleFishCustomFish, "Update")
+                    is MethodInfo visibleFishCustomFishUpdate
+                )
+                {
+                    ModEntry.Log($"Patching VisibleFish: {visibleFishCustomFishUpdate}");
+                    harmony.Patch(
+                        original: visibleFishCustomFishUpdate,
+                        postfix: new HarmonyMethod(typeof(FishPatches), nameof(VisibleFish_Update_Postfix))
+                    );
+                }
+                if (
+                    AccessTools.DeclaredMethod(visibleFishCustomFish, "GetBounds")
+                    is MethodInfo visibleFishCustomFishGetBounds
+                )
+                {
+                    ModEntry.Log($"Patching VisibleFish: {visibleFishCustomFishGetBounds}");
+                    harmony.Patch(
+                        original: visibleFishCustomFishGetBounds,
+                        postfix: new HarmonyMethod(typeof(FishPatches), nameof(TankFish_GetBounds_Postfix))
+                    );
+                }
             }
         }
 
@@ -671,6 +693,15 @@ internal static class FishPatches
             if (__instance.fishType == TankFish.FishType.Float)
                 __instance.velocity.X = 0;
             __instance.facingLeft = false;
+        }
+        drawOverride.Update(time);
+    }
+
+    private static void VisibleFish_Update_Postfix(TankFish __instance, FishTankFurniture ____tank, GameTime time)
+    {
+        if (GetTankFishDrawOverride(__instance) is not TankFishDrawOverride drawOverride)
+        {
+            return;
         }
         drawOverride.Update(time);
     }

@@ -18,7 +18,7 @@
     <Description>What is man that he should chase a whale?</Description>
     <UniqueId>mushymato.MobyDick</UniqueId>
     <UpdateKeys>Nexus:???,GitHub:Mushymato/MobyDick</UpdateKeys>
-    <Version>0.3.0</Version>
+    <Version>0.3.1</Version>
     <MinimumApiVersion_Behavior>Update</MinimumApiVersion_Behavior>
     <MinimumGameVersion_Behavior>UpdateFull</MinimumGameVersion_Behavior>
     <Dependencies_VersionBehavior>UpdateFull</Dependencies_VersionBehavior>

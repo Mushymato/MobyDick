@@ -38,6 +38,7 @@ public sealed class MobyDickData
     public float DrawScaleInTank { get; set; } = 4f;
     public string? AquariumTextureOverride { get; set; } = null;
     public Rectangle AquariumTextureRect { get; set; } = Rectangle.Empty;
+    public Vector2 HeldItemOriginOffset { get; set; } = Vector2.Zero;
 
     [JsonConverter(typeof(StringIntListConverter))]
     public List<int>? SwimAnimation { get; set; } = null;

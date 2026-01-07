@@ -459,17 +459,29 @@ internal static class FishPatches
         if (!TryGetMBData(itemMetadata.LocalItemId, out MobyDickData? data, out AquariumFishData? aqf))
             return true;
         Rectangle sourceRect = data.GetAquariumSourceRect();
-        float originW = MathF.Min(sourceRect.Width, sourceRect.Height) / 2;
-        Vector2 origin = new(originW, originW);
+        Vector2 drawPos = new(objectPosition.X + 32, objectPosition.Y + 32);
+        Vector2 origin = new(sourceRect.Width / 2, sourceRect.Height / 2);
+        origin.Y += data.HeldItemOriginOffset.Y;
+        SpriteEffects flip;
+        if (f.facingDirection.Value == 3)
+        {
+            flip = SpriteEffects.FlipHorizontally;
+            origin.X -= data.HeldItemOriginOffset.X;
+        }
+        else
+        {
+            flip = SpriteEffects.None;
+            origin.X += data.HeldItemOriginOffset.X;
+        }
         spriteBatch.Draw(
             aqf.GetTexture(),
-            new(objectPosition.X - Math.Sign(f.rotation) * 8, objectPosition.Y + (sourceRect.Height - 16) * 2f),
+            drawPos,
             sourceRect,
             Color.White,
             0f,
             origin,
             4f,
-            SpriteEffects.None,
+            flip,
             Math.Max(0f, (f.StandingPixel.Y + 3) / 10000f)
         );
         return false;

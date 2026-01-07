@@ -26,6 +26,7 @@
             "Y": 32
           },
           "WiggleSegmentLength": 0,
+          "HeldItemOriginOffset": "32,0",
           "AquariumTextureOverride": "{{ModId}}\\oarfish",
           "SwimAnimation": "{{Range: 0,6}}",
         },

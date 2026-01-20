@@ -4,7 +4,7 @@ using StardewValley;
 using StardewValley.Objects;
 using TankFishType = StardewValley.Objects.TankFish.FishType;
 
-namespace MobyDick;
+namespace MobyDick.Model;
 
 internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data)
 {

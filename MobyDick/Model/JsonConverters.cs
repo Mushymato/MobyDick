@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace MobyDick;
+namespace MobyDick.Model;
 
 public sealed class StringIntListConverter : JsonConverter
 {

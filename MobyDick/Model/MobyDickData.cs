@@ -1,11 +1,12 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MobyDick.Framework;
 using Newtonsoft.Json;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 
-namespace MobyDick;
+namespace MobyDick.Model;
 
 internal sealed record AquariumFishData(
     int FishIndex,

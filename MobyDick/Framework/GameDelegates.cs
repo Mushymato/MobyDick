@@ -6,7 +6,7 @@ using StardewValley.Delegates;
 using StardewValley.ItemTypeDefinitions;
 using StardewValley.Triggers;
 
-namespace MobyDick;
+namespace MobyDick.Framework;
 
 internal static class GameDelegates
 {

@@ -10,6 +10,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>default</LangVersion>
     <EnableHarmony>true</EnableHarmony>
+    <ModZipPath>$(MSBuildThisFileDirectory)/../_releases</ModZipPath>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -19,6 +20,7 @@
     <UniqueId>mushymato.MobyDick</UniqueId>
     <UpdateKeys>Nexus:???,GitHub:Mushymato/MobyDick</UpdateKeys>
     <Version>0.4.0</Version>
+    <BaseManifest>new</BaseManifest>
     <MinimumApiVersion_Behavior>Update</MinimumApiVersion_Behavior>
     <MinimumGameVersion_Behavior>UpdateFull</MinimumGameVersion_Behavior>
     <Dependencies_VersionBehavior>UpdateFull</Dependencies_VersionBehavior>

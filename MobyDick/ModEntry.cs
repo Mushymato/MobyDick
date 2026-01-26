@@ -1,5 +1,6 @@
 global using SObject = StardewValley.Object;
 using System.Diagnostics;
+using HarmonyLib;
 using MobyDick.Framework;
 using MobyDick.Model;
 using StardewModdingAPI;
@@ -20,9 +21,10 @@ public sealed class ModEntry : Mod
     public override void Entry(IModHelper helper)
     {
         mon = Monitor;
+        Harmony harmony = new(ModEntry.ModId);
         AssetManager.Register(helper);
         GameDelegates.Register(helper);
-        FishPatches.Patch(helper);
+        Framework.Patches.Patch(helper, harmony);
     }
 
     /// <summary>SMAPI static monitor Log wrapper</summary>

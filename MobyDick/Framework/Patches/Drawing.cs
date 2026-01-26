@@ -16,63 +16,85 @@ using StardewValley.Tools;
 
 namespace MobyDick.Framework;
 
-internal static class FishPatches
+internal static partial class Patches
 {
-    internal static void Patch(IModHelper helper)
+    internal static void Patch_Drawing(IModHelper helper, Harmony harmony)
     {
-        Harmony harmony = new(ModEntry.ModId);
         try
         {
+            // introduce special drawing logic for tankfish
             harmony.Patch(
                 original: AccessTools.DeclaredMethod(typeof(TankFish), nameof(TankFish.Draw)),
-                transpiler: new HarmonyMethod(typeof(FishPatches), nameof(TankFish_Draw_Transpiler))
+                transpiler: new HarmonyMethod(typeof(Patches), nameof(TankFish_Draw_Transpiler))
             );
+            // change bounds for purpose of turnaround
             harmony.Patch(
                 original: AccessTools.DeclaredMethod(typeof(TankFish), nameof(TankFish.GetBounds)),
-                postfix: new HarmonyMethod(typeof(FishPatches), nameof(TankFish_GetBounds_Postfix))
+                postfix: new HarmonyMethod(typeof(Patches), nameof(TankFish_GetBounds_Postfix))
             );
+            // change turnaround logic
             harmony.Patch(
                 original: AccessTools.DeclaredMethod(typeof(TankFish), nameof(TankFish.Update)),
-                postfix: new HarmonyMethod(typeof(FishPatches), nameof(TankFish_Update_Postfix))
+                postfix: new HarmonyMethod(typeof(Patches), nameof(TankFish_Update_Postfix))
             );
+        }
+        catch (Exception err)
+        {
+            ModEntry.Log($"Error in Patch_Drawing(primary):\n{err}", LogLevel.Error);
+            return;
+        }
+
+        try
+        {
+            // change how fish looks in other scenarios
+
+            // fished up from water
             harmony.Patch(
                 original: AccessTools.DeclaredMethod(typeof(FishingRod), "doPullFishFromWater"),
-                postfix: new HarmonyMethod(typeof(FishPatches), nameof(FishingRod_doPullFishFromWater_Postfix))
+                postfix: new HarmonyMethod(typeof(Patches), nameof(FishingRod_doPullFishFromWater_Postfix))
             );
+            // held after fished
+            harmony.Patch(
+                original: AccessTools.DeclaredMethod(typeof(FishingRod), nameof(FishingRod.draw)),
+                transpiler: new HarmonyMethod(typeof(Patches), nameof(FishingRod_draw_Transpiler))
+            );
+
+            // eat the fish
             harmony.Patch(
                 original: AccessTools.DeclaredMethod(typeof(Farmer), nameof(Farmer.showEatingItem)),
-                prefix: new HarmonyMethod(typeof(FishPatches), nameof(Farmer_showEatingItem_Prefix)),
-                postfix: new HarmonyMethod(typeof(FishPatches), nameof(Farmer_showEatingItem_Postfix))
+                prefix: new HarmonyMethod(typeof(Patches), nameof(Farmer_showEatingItem_Prefix)),
+                postfix: new HarmonyMethod(typeof(Patches), nameof(Farmer_showEatingItem_Postfix))
             );
+            // fish frenzy
             harmony.Patch(
                 original: AccessTools.DeclaredMethod(
                     typeof(GameLocation),
                     nameof(GameLocation.UpdateWhenCurrentLocation)
                 ),
-                postfix: new HarmonyMethod(typeof(FishPatches), nameof(GameLocation_UpdateWhenCurrentLocation_Postfix))
+                postfix: new HarmonyMethod(typeof(Patches), nameof(GameLocation_UpdateWhenCurrentLocation_Postfix))
             );
-            harmony.Patch(
-                original: AccessTools.DeclaredMethod(typeof(FishingRod), nameof(FishingRod.draw)),
-                transpiler: new HarmonyMethod(typeof(FishPatches), nameof(FishingRod_draw_Transpiler))
-            );
+            // held above head
             harmony.Patch(
                 original: AccessTools.DeclaredMethod(typeof(SObject), nameof(SObject.drawWhenHeld)),
-                prefix: new HarmonyMethod(typeof(FishPatches), nameof(SObject_drawWhenHeld_Prefix))
+                prefix: new HarmonyMethod(typeof(Patches), nameof(SObject_drawWhenHeld_Prefix))
                 {
                     priority = Priority.Last,
                 }
             );
+            // put on furniture
             harmony.Patch(
                 original: AccessTools.DeclaredMethod(typeof(Furniture), nameof(Furniture.draw)),
-                transpiler: new HarmonyMethod(typeof(FishPatches), nameof(Furniture_draw_Transpiler))
+                transpiler: new HarmonyMethod(typeof(Patches), nameof(Furniture_draw_Transpiler))
             );
+            // smoked
             harmony.Patch(
                 original: AccessTools.DeclaredMethod(typeof(ColoredObject), "drawSmokedFish"),
-                transpiler: new HarmonyMethod(typeof(FishPatches), nameof(ColoredObject_drawSmokedFish_Transpiler))
+                transpiler: new HarmonyMethod(typeof(Patches), nameof(ColoredObject_drawSmokedFish_Transpiler))
             );
+            // fish pond jumping fish
             harmony.Patch(
                 original: AccessTools.DeclaredMethod(typeof(JumpingFish), nameof(JumpingFish.Draw)),
-                prefix: new HarmonyMethod(typeof(FishPatches), nameof(JumpingFish_Draw_Postfix))
+                prefix: new HarmonyMethod(typeof(Patches), nameof(JumpingFish_Draw_Postfix))
                 {
                     priority = Priority.Last,
                 }
@@ -80,50 +102,8 @@ internal static class FishPatches
         }
         catch (Exception err)
         {
-            ModEntry.Log($"Error in TankFishDrawPatches:\n{err}", LogLevel.Error);
+            ModEntry.Log($"Error in Patch_Drawing(secondary):\n{err}", LogLevel.Error);
             return;
-        }
-
-        if (
-            helper.ModRegistry.Get("shekurika.WaterFish") is IModInfo modInfo
-            && modInfo.GetType().GetProperty("Mod")?.GetValue(modInfo) is IMod mod
-        )
-        {
-            Assembly assembly = mod.GetType().Assembly;
-            if ((visibleFishCustomFish = assembly.GetType("showFishInWater.CustomFish")) is not null)
-            {
-                if (AccessTools.DeclaredMethod(visibleFishCustomFish, "Draw") is MethodInfo visibleFishCustomFishDraw)
-                {
-                    ModEntry.Log($"Patching VisibleFish: {visibleFishCustomFishDraw}");
-                    showFishInWater_CustomFish_alpha = AccessTools.DeclaredField(visibleFishCustomFish, "alpha");
-                    harmony.Patch(
-                        original: AccessTools.DeclaredMethod(visibleFishCustomFish, "Draw"),
-                        transpiler: new HarmonyMethod(typeof(FishPatches), nameof(TankFish_Draw_Transpiler))
-                    );
-                }
-                if (
-                    AccessTools.DeclaredMethod(visibleFishCustomFish, "Update")
-                    is MethodInfo visibleFishCustomFishUpdate
-                )
-                {
-                    ModEntry.Log($"Patching VisibleFish: {visibleFishCustomFishUpdate}");
-                    harmony.Patch(
-                        original: visibleFishCustomFishUpdate,
-                        postfix: new HarmonyMethod(typeof(FishPatches), nameof(VisibleFish_Update_Postfix))
-                    );
-                }
-                if (
-                    AccessTools.DeclaredMethod(visibleFishCustomFish, "GetBounds")
-                    is MethodInfo visibleFishCustomFishGetBounds
-                )
-                {
-                    ModEntry.Log($"Patching VisibleFish: {visibleFishCustomFishGetBounds}");
-                    harmony.Patch(
-                        original: visibleFishCustomFishGetBounds,
-                        postfix: new HarmonyMethod(typeof(FishPatches), nameof(TankFish_GetBounds_Postfix))
-                    );
-                }
-            }
         }
 
         helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
@@ -131,6 +111,60 @@ internal static class FishPatches
         helper.Events.Display.RenderedHud += OnRenderedHud;
         helper.Events.Display.RenderingActiveMenu += OnRenderingActiveMenu;
         helper.Events.Display.RenderedActiveMenu += OnRenderedActiveMenu;
+
+        // visible fish patches
+        try
+        {
+            if (
+                helper.ModRegistry.Get("shekurika.WaterFish") is IModInfo modInfo
+                && modInfo.GetType().GetProperty("Mod")?.GetValue(modInfo) is IMod mod
+            )
+            {
+                Assembly assembly = mod.GetType().Assembly;
+                if ((visibleFishCustomFish = assembly.GetType("showFishInWater.CustomFish")) is not null)
+                {
+                    if (
+                        AccessTools.DeclaredMethod(visibleFishCustomFish, "Draw")
+                        is MethodInfo visibleFishCustomFishDraw
+                    )
+                    {
+                        ModEntry.Log($"Patching VisibleFish: {visibleFishCustomFishDraw}");
+                        showFishInWater_CustomFish_alpha = AccessTools.DeclaredField(visibleFishCustomFish, "alpha");
+                        harmony.Patch(
+                            original: AccessTools.DeclaredMethod(visibleFishCustomFish, "Draw"),
+                            transpiler: new HarmonyMethod(typeof(Patches), nameof(TankFish_Draw_Transpiler))
+                        );
+                    }
+                    if (
+                        AccessTools.DeclaredMethod(visibleFishCustomFish, "Update")
+                        is MethodInfo visibleFishCustomFishUpdate
+                    )
+                    {
+                        ModEntry.Log($"Patching VisibleFish: {visibleFishCustomFishUpdate}");
+                        harmony.Patch(
+                            original: visibleFishCustomFishUpdate,
+                            postfix: new HarmonyMethod(typeof(Patches), nameof(VisibleFish_Update_Postfix))
+                        );
+                    }
+                    if (
+                        AccessTools.DeclaredMethod(visibleFishCustomFish, "GetBounds")
+                        is MethodInfo visibleFishCustomFishGetBounds
+                    )
+                    {
+                        ModEntry.Log($"Patching VisibleFish: {visibleFishCustomFishGetBounds}");
+                        harmony.Patch(
+                            original: visibleFishCustomFishGetBounds,
+                            postfix: new HarmonyMethod(typeof(Patches), nameof(TankFish_GetBounds_Postfix))
+                        );
+                    }
+                }
+            }
+        }
+        catch (Exception err)
+        {
+            ModEntry.Log($"Error in Patch_Drawing(VisibleFish):\n{err}", LogLevel.Error);
+            return;
+        }
     }
 
     private static CodeInstruction StlocToLdloca(CodeInstruction stloc)
@@ -261,7 +295,7 @@ internal static class FishPatches
                 ldlocaOrigin,
                 new(
                     OpCodes.Call,
-                    AccessTools.DeclaredMethod(typeof(FishPatches), nameof(ColoredObject_drawSmokedFish_ReplaceVars))
+                    AccessTools.DeclaredMethod(typeof(Patches), nameof(ColoredObject_drawSmokedFish_ReplaceVars))
                 ),
             ]);
 
@@ -345,7 +379,7 @@ internal static class FishPatches
                     new(OpCodes.Ldarg_1),
                     new(
                         OpCodes.Call,
-                        AccessTools.DeclaredMethod(typeof(FishPatches), nameof(Furniture_checkHeldItemAndDraw))
+                        AccessTools.DeclaredMethod(typeof(Patches), nameof(Furniture_checkHeldItemAndDraw))
                     ),
                     new(OpCodes.Brtrue, AfterHeldObject),
                 ]);
@@ -599,17 +633,14 @@ internal static class FishPatches
                     new(OpCodes.Ldarg_0),
                     ldlocaTexture,
                     ldlocaRect,
-                    new(
-                        OpCodes.Call,
-                        AccessTools.DeclaredMethod(typeof(FishPatches), nameof(FishingRod_Draw_ReplaceVars))
-                    ),
+                    new(OpCodes.Call, AccessTools.DeclaredMethod(typeof(Patches), nameof(FishingRod_Draw_ReplaceVars))),
                 ]);
             // IL_15d6: ldc.r4 8
             // IL_15db: ldc.r4 8
             // IL_15e0: newobj instance void [MonoGame.Framework]Microsoft.Xna.Framework.Vector2::.ctor(float32, float32)
             CodeInstruction replaceOrigin = new(
                 OpCodes.Call,
-                AccessTools.DeclaredMethod(typeof(FishPatches), nameof(FishingRod_Draw_ReplaceOrigin))
+                AccessTools.DeclaredMethod(typeof(Patches), nameof(FishingRod_Draw_ReplaceOrigin))
             );
             for (int i = 0; i < 2; i++)
             {
@@ -765,7 +796,7 @@ internal static class FishPatches
                     new(OpCodes.Ldarg_1),
                     new(OpCodes.Ldarg_2),
                     new(OpCodes.Ldarg_3),
-                    new(OpCodes.Call, AccessTools.DeclaredMethod(typeof(FishPatches), nameof(TankFish_DrawOverride))),
+                    new(OpCodes.Call, AccessTools.DeclaredMethod(typeof(Patches), nameof(TankFish_DrawOverride))),
                     new(OpCodes.Brtrue, label),
                     new(OpCodes.Ldc_I4_0),
                 ]);
@@ -809,10 +840,7 @@ internal static class FishPatches
                         new(OpCodes.Ldarg_1),
                         new(OpCodes.Ldarg_2),
                         new(OpCodes.Ldarg_3),
-                        new(
-                            OpCodes.Call,
-                            AccessTools.DeclaredMethod(typeof(FishPatches), nameof(TankFish_DrawOverride))
-                        ),
+                        new(OpCodes.Call, AccessTools.DeclaredMethod(typeof(Patches), nameof(TankFish_DrawOverride))),
                         new(OpCodes.Brtrue, drawLbl),
                     ]);
             }

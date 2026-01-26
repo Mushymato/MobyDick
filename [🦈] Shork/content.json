@@ -9,6 +9,10 @@
     {
       "Action": "Include",
       "FromFile": "data/moby.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "data/bait.json"
     }
   ]
 }

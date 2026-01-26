@@ -51,46 +51,6 @@
       },
     },
     {
-      "Action": "EditData",
-      "Target": "Data/Locations",
-      "TargetField": [
-        "Beach"
-      ],
-      "Entries": {
-        "Fish": [
-          {
-            "Chance": 1.0,
-            "Id": "{{ModId}}_shork.beach",
-            "RandomItemId": [
-              "{{ModId}}_shork",
-              "{{ModId}}_whiteshark"
-            ],
-          }
-        ]
-      },
-    },
-    // {
-    //   "Action": "EditData",
-    //   "Target": "Data/Locations",
-    //   "TargetField": [
-    //     "Beach",
-    //     "Fish"
-    //   ],
-    //   "Entries": {
-    //     "{{ModId}}_shork.beach": {
-    //       "Chance": 1.0,
-    //       "Id": "{{ModId}}_shork.beach",
-    //       "ItemId": "{{ModId}}_shork",
-    //     }
-    //   },
-    //   "MoveEntries": [
-    //     {
-    //       "ID": "{{ModId}}_shork.beach",
-    //       "ToPosition": "Top"
-    //     }
-    //   ]
-    // },
-    {
       "LogName": "Aquarium data",
       "Action": "EditData",
       "Target": "Data/AquariumFish",

@@ -22,6 +22,14 @@ The key is the (unqualified) item id of the fish.
 | SwimAnimation | List<int> | _null_ | A special swimming animation, whose frame interval depends on the fish's movement speed. Fish animate faster when moving faster. |
 | SwimAnimationInterval | float | 125f | The base frame interval for the swim animation. |
 
+### Fish Frenzy
+
+You can spawn a fish frenzy (i.e. the thing where fish appear enmass in a bubble spot) in the current location using this trigger action:
+
+```
+mushymato.MobyDick_FishFrenzy [fishId] [X] [Y]
+```
+
 ### Custom Bait and Tackle Items
 
 In the base game you can use category -22 items as tackles and category -21 items as bait.

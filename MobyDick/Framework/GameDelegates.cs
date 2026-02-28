@@ -21,15 +21,15 @@ internal static class GameDelegates
 
     private static bool DoFishFrenzy(string[] args, TriggerActionContext context, out string error)
     {
-        // debug action mushymato.MobyDick_FishFrenzy Here (O)debug.Shork_shork 45 15
+        // debug action mushymato.MobyDick_FishFrenzy (O)debug.Shork_shork 45 15
         if (!Context.IsWorldReady || Game1.currentLocation is not GameLocation location)
         {
             error = "Null location";
             return false;
         }
         if (
-            !ArgUtility.TryGet(args, 2, out string fishId, out error, name: "string fishId")
-            || !ArgUtility.TryGetPoint(args, 3, out Point point, out error, "Point point")
+            !ArgUtility.TryGet(args, 1, out string fishId, out error, name: "string fishId")
+            || !ArgUtility.TryGetPoint(args, 2, out Point point, out error, "Point point")
         )
         {
             return false;

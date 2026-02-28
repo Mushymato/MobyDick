@@ -134,7 +134,8 @@ internal static partial class Patches
                 ?? false
             )
             {
-                __result = o.HasContextTag(baitTag);
+                foreach (string tag in baitTag.Split(','))
+                    __result = o.HasContextTag(tag);
             }
             else
             {
@@ -148,11 +149,12 @@ internal static partial class Patches
                 return;
             }
             if (
-                __instance.GetToolData()?.CustomFields?.TryGetValue(CustomField_TackleContextTag, out string? baitTag)
+                __instance.GetToolData()?.CustomFields?.TryGetValue(CustomField_TackleContextTag, out string? tackleTag)
                 ?? false
             )
             {
-                __result = o.HasContextTag(baitTag);
+                foreach (string tag in tackleTag.Split(','))
+                    __result = o.HasContextTag(tag);
             }
             else
             {

@@ -33,7 +33,7 @@ internal sealed record AquariumFishData(
 public sealed class MobyDickData
 {
     #region content_pack
-    public Point SpriteSize { get; set; } = Point.Zero;
+    public Point SpriteSize { get; set; } = new(24, 24);
     public bool RotateByVelocity { get; set; } = false;
     public int WiggleSegmentLength { get; set; } = 0;
     public float DrawScaleInTank { get; set; } = 4f;
@@ -51,7 +51,7 @@ public sealed class MobyDickData
 
     internal Rectangle GetAquariumSourceRect(int currentFrame = -1, Texture2D? texture = null)
     {
-        if (AquariumFish == null || AquariumFish.IsErrorFish)
+        if (AquariumFish == null || AquariumFish.IsErrorFish || SpriteSize.X == 0 || SpriteSize.Y == 0)
         {
             return new(0, 0, 16, 16);
         }

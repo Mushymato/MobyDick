@@ -19,6 +19,8 @@ The key is the (unqualified) item id of the fish.
 | AquariumTextureOverride | string | _null_ | Replace the aquarium texture with texture at this path. You can specify the texture in `Data/AquariumFish`, but this provides a shortcut. |
 | AquariumTextureRect | Rectangle | _empty_ | Decide which area of the aquarium texture to treat as the bounds of the texture in general, which is then used for frame calculations. If this is empty, then the texture's bounds is used. |
 | HeldItemOriginOffset | Vector2 | `0,0` | How much to offset when the fish is held over player's head as an item. |
+| MinimumVelocity | float | `-1` | If set to 0 or above, this will alter the minimum velocity of the fish. This affects how fast they move and how often they dart. |
+| MinimumVelocityVariance | float | `0.1` | If MinimumVelocity will be altered, a random value between 0 and MinimumVelocityVariance is added to it. |
 | SwimAnimation | List<int> | _null_ | A special swimming animation, whose frame interval depends on the fish's movement speed. Fish animate faster when moving faster. |
 | SwimAnimationInterval | float | 125f | The base frame interval for the swim animation. |
 

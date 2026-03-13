@@ -12,6 +12,8 @@ internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data)
     {
         if (AssetManager.MBData.TryGetValue(key.fishItemId, out MobyDickData? data) && data.SpriteSize.X > 0)
         {
+            if (data.MinimumVelocity >= 0 && data.MinimumVelocityVariance >= 0)
+                key.minimumVelocity = data.MinimumVelocity + data.MinimumVelocityVariance * Random.Shared.NextSingle();
             return new(key, data);
         }
         return null;

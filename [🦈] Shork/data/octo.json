@@ -1,0 +1,31 @@
+{
+  "$schema": "https://smapi.io/schemas/content-patcher.json",
+  "Changes": [
+    {
+      "Action": "Load",
+      "Target": "{{ModId}}\\octopus_new",
+      "FromFile": "assets/octopus_new.png"
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/AquariumFish",
+      "Entries": {
+        "149": "0/cephalopod/0/0 1/2 2 3 3/3 4",
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "mushymato.MobyDick/Data",
+      "Entries": {
+        "149": {
+          "RotateByVelocity": true,
+          "SpriteSize": {
+            "X": 32,
+            "Y": 32
+          },
+          "AquariumTextureOverride": "{{ModId}}\\octopus_new",
+        },
+      }
+    }
+  ]
+}

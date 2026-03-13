@@ -13,6 +13,10 @@
     {
       "Action": "Include",
       "FromFile": "data/bait.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "data/octo.json"
     }
   ]
 }

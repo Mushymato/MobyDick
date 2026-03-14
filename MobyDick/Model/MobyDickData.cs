@@ -40,8 +40,10 @@ public sealed class MobyDickData
     public string? AquariumTextureOverride { get; set; } = null;
     public Rectangle AquariumTextureRect { get; set; } = Rectangle.Empty;
     public Vector2 HeldItemOriginOffset { get; set; } = Vector2.Zero;
-    public float MinimumVelocity { get; set; } = -1f;
-    public float MinimumVelocityVariance { get; set; } = 0.1f;
+    public float SwimCooldownMin { get; set; } = -1f;
+    public float SwimCooldownMax { get; set; } = -1f;
+    public Vector2 SwimVelocityMin { get; set; } = -Vector2.One;
+    public Vector2 SwimVelocityMax { get; set; } = -Vector2.One;
 
     [JsonConverter(typeof(StringIntListConverter))]
     public List<int>? SwimAnimation { get; set; } = null;

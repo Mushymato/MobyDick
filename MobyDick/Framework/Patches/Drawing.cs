@@ -32,9 +32,10 @@ internal static partial class Patches
                 original: AccessTools.DeclaredMethod(typeof(TankFish), nameof(TankFish.GetBounds)),
                 postfix: new HarmonyMethod(typeof(Patches), nameof(TankFish_GetBounds_Postfix))
             );
-            // change turnaround logic
+            // change turnaround logic and adjust swiming
             harmony.Patch(
                 original: AccessTools.DeclaredMethod(typeof(TankFish), nameof(TankFish.Update)),
+                prefix: new HarmonyMethod(typeof(Patches), nameof(TankFish_Update_Prefix)),
                 postfix: new HarmonyMethod(typeof(Patches), nameof(TankFish_Update_Postfix))
             );
         }
@@ -143,6 +144,7 @@ internal static partial class Patches
                         ModEntry.Log($"Patching VisibleFish: {visibleFishCustomFishUpdate}");
                         harmony.Patch(
                             original: visibleFishCustomFishUpdate,
+                            prefix: new HarmonyMethod(typeof(Patches), nameof(TankFish_Update_Prefix)),
                             postfix: new HarmonyMethod(typeof(Patches), nameof(VisibleFish_Update_Postfix))
                         );
                     }
@@ -726,7 +728,17 @@ internal static partial class Patches
         }
     }
 
-    private static void TankFish_Update_Postfix(TankFish __instance, FishTankFurniture ____tank, GameTime time)
+    private static void TankFish_Update_Prefix(TankFish __instance, GameTime time, ref float __state)
+    {
+        __state = __instance.nextSwim;
+    }
+
+    private static void TankFish_Update_Postfix(
+        TankFish __instance,
+        FishTankFurniture ____tank,
+        GameTime time,
+        ref float __state
+    )
     {
         if (GetTankFishDrawOverride(__instance) is not TankFishDrawOverride drawOverride)
         {
@@ -738,16 +750,16 @@ internal static partial class Patches
                 __instance.velocity.X = 0;
             __instance.facingLeft = false;
         }
-        drawOverride.Update(time);
+        drawOverride.Update(time, ____tank, __state);
     }
 
-    private static void VisibleFish_Update_Postfix(TankFish __instance, FishTankFurniture ____tank, GameTime time)
+    private static void VisibleFish_Update_Postfix(TankFish __instance, GameTime time, ref float __state)
     {
         if (GetTankFishDrawOverride(__instance) is not TankFishDrawOverride drawOverride)
         {
             return;
         }
-        drawOverride.Update(time);
+        drawOverride.Update(time, null, __state);
     }
 
     private static void TankFish_GetBounds_Postfix(

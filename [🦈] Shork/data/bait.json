@@ -16,7 +16,7 @@
             "{{ModId}}_shork",
             "{{ModId}}_whiteshark"
           ],
-          "Condition": "mushymato.MobyDick_HAS_BAIT (O)131"
+          //"Condition": "mushymato.MobyDick_HAS_BAIT (O)131"
         }
       },
       "MoveEntries": [

@@ -21,7 +21,7 @@ public sealed class ModEntry : Mod
     public override void Entry(IModHelper helper)
     {
         mon = Monitor;
-        Harmony harmony = new(ModEntry.ModId);
+        Harmony harmony = new(ModId);
         AssetManager.Register(helper);
         GameDelegates.Register(helper);
         Framework.Patches.Patch(helper, harmony);

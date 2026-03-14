@@ -8,13 +8,23 @@ namespace MobyDick.Model;
 
 internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data)
 {
-    internal static TankFishDrawOverride? Create(TankFish key)
+    internal static float NextSingleBounded(Random rand, float min, float max) =>
+        min + rand.NextSingle() * (MathF.Max(min, max) - min);
+
+    internal static TankFishDrawOverride? Create(TankFish fish)
     {
-        if (AssetManager.MBData.TryGetValue(key.fishItemId, out MobyDickData? data) && data.SpriteSize.X > 0)
+        if (AssetManager.MBData.TryGetValue(fish.fishItemId, out MobyDickData? data) && data.SpriteSize.X > 0)
         {
-            if (data.MinimumVelocity >= 0 && data.MinimumVelocityVariance >= 0)
-                key.minimumVelocity = data.MinimumVelocity + data.MinimumVelocityVariance * Random.Shared.NextSingle();
-            return new(key, data);
+            if (data.SwimVelocityMin.X >= 0f && data.SwimVelocityMin.Length() >= 0f)
+            {
+                fish.minimumVelocity = NextSingleBounded(
+                    Random.Shared,
+                    data.SwimVelocityMin.Length(),
+                    data.SwimVelocityMax.Length()
+                );
+                fish.velocity = new Vector2(fish.facingLeft ? -1 : 1f, fish.velocity.Y) * fish.minimumVelocity;
+            }
+            return new(fish, data);
         }
         return null;
     }
@@ -134,8 +144,29 @@ internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data)
         );
     }
 
-    internal void Update(GameTime time)
+    internal void Update(GameTime time, FishTankFurniture? tank, float priorNextSwim)
     {
+        if (priorNextSwim - time.ElapsedGameTime.TotalSeconds <= 0f)
+        {
+            // nextSwim had been reset this update
+            if (Data.SwimCooldownMin > 0f)
+                Fish.nextSwim = Utility.RandomFloat(
+                    Data.SwimCooldownMin,
+                    MathF.Max(Data.SwimCooldownMin, Data.SwimCooldownMax)
+                );
+            if (Data.SwimVelocityMin.X >= 0f)
+            {
+                Fish.velocity.X = NextSingleBounded(Random.Shared, Data.SwimVelocityMin.X, Data.SwimVelocityMax.X);
+                if (Fish.facingLeft)
+                    Fish.velocity.X *= -1f;
+                if (tank != null && tank.getTilesWide() <= 2)
+                    Fish.velocity.X *= 0.5f;
+            }
+            if (Data.SwimVelocityMin.Y >= 0f)
+            {
+                Fish.velocity.Y = NextSingleBounded(Random.Shared, Data.SwimVelocityMin.Y, Data.SwimVelocityMax.Y);
+            }
+        }
         if (currentAnimationFrame < 0)
             return;
         float frameLen = Data.SwimAnimationInterval;

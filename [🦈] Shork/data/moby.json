@@ -11,10 +11,14 @@
             "Y": 32
           },
           "WiggleSegmentLength": 8,
-          "SwimVelocityMin": "0,0",
-          "SwimVelocityMax": "1.5,0",
+          // min horizontal speed
+          "SwimVelocityMin": 20,
+          // min horizontal speed
+          "SwimVelocityMax": 30,
+          // min seconds between swim
           "SwimCooldownMin": 3,
-          "SwimCooldownMax": 6
+          // max seconds between swim
+          "SwimCooldownMax": 6,
         },
         "{{ModId}}_whiteshark": {
           "SpriteSize": {

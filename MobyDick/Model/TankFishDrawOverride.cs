@@ -6,14 +6,14 @@ using TankFishType = StardewValley.Objects.TankFish.FishType;
 
 namespace MobyDick.Model;
 
-internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data)
+internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data, Texture2D Texture, Rectangle TextureRect)
 {
     internal static float NextSingleBounded(Random rand, float min, float max) =>
         min + rand.NextSingle() * (MathF.Max(min, max) - min);
 
     internal static TankFishDrawOverride? Create(TankFish fish)
     {
-        if (AssetManager.MBData.TryGetValue(fish.fishItemId, out MobyDickData? data) && data.SpriteSize.X > 0)
+        if (AssetManager.TryGet(fish.fishItemId, out MobyDickData? data) && data.SpriteSize.X > 0)
         {
             if (data.MinimumVelocity >= 0f)
             {
@@ -24,20 +24,19 @@ internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data)
                     fish.velocity.Y
                 );
             }
-            return new(fish, data);
+            FishTankFurniture tank = DynamicMethods.Get_TankFish__tank(fish);
+            data.GetTextureConditionalDataFields(tank.Location, out Texture2D texture, out Rectangle textureRect);
+            return new(fish, data, texture, textureRect);
         }
         return null;
     }
-
-    internal Item? FishItem { get; set; } = null;
 
     private Vector2 origin = new(Data.SpriteSize.X / 2f, Data.SpriteSize.Y / 2f);
     public double currentFrameTime = 0f;
     private int currentAnimationFrame = Data.SwimAnimation?.Count > 0 ? 0 : -1;
 
-    internal void Draw(Texture2D texture, SpriteBatch b, float alpha, float draw_layer)
+    internal void Draw(SpriteBatch b, float alpha, float draw_layer)
     {
-        texture = Data.AquariumFish?.GetTexture() ?? texture;
         float scale = Fish.GetScale() * Data.DrawScaleInTank;
         float heightVariance = Fish.fishType switch
         {
@@ -47,8 +46,8 @@ internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data)
                 * 2f,
         };
         Rectangle sourceRect = Data.GetAquariumSourceRect(
-            currentAnimationFrame > -1 ? Data.SwimAnimation![currentAnimationFrame] : Fish.currentFrame,
-            texture
+            TextureRect,
+            currentAnimationFrame > -1 ? Data.SwimAnimation![currentAnimationFrame] : Fish.currentFrame
         );
 
         Vector2 drawPos = Fish.GetWorldPosition();
@@ -63,7 +62,7 @@ internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data)
         if (wiggleLen <= 0 || wiggleLen > sourceRect.Width)
         {
             b.Draw(
-                texture,
+                Texture,
                 Game1.GlobalToLocal(drawPos),
                 sourceRect,
                 Color.White * alpha,
@@ -110,7 +109,7 @@ internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data)
                 );
 
                 b.Draw(
-                    texture,
+                    Texture,
                     Game1.GlobalToLocal(drawPos + new Vector2(wiggleX, wiggleY) * scale),
                     new(sourceRect.X + i * wiggleLen, sourceRect.Y, wiggleLen, sourceRect.Height),
                     Color.White * alpha,

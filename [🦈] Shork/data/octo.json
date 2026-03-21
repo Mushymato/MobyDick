@@ -24,6 +24,22 @@
             "Y": 32
           },
           "AquariumTextureOverride": "{{ModId}}\\octopus_new",
+          "AquariumTexturesConditional": [
+            {
+              "Id": "OctoNormal",
+              "Season": "Spring"
+            },
+            {
+              "Id": "OctoInverted",
+              "Season": "Winter",
+              "TextureRect": {
+                "X": 0,
+                "Y": 32,
+                "Width": 160,
+                "Height": 32
+              }
+            }
+          ]
         },
       }
     }

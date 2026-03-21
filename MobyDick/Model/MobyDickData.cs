@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MobyDick.Framework;
@@ -5,6 +6,9 @@ using Newtonsoft.Json;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using StardewValley.Delegates;
+using StardewValley.Extensions;
+using StardewValley.Objects;
 
 namespace MobyDick.Model;
 
@@ -21,14 +25,20 @@ internal sealed record AquariumFishData(
 {
     internal bool IsErrorFish =>
         string.IsNullOrEmpty(TextureName) || !Game1.content.DoesAssetExist<Texture2D>(TextureName);
-
-    internal Texture2D GetTexture()
-    {
-        if (IsErrorFish)
-            return Game1.content.Load<Texture2D>("LooseSprites\\AquariumFish");
-        return Game1.content.Load<Texture2D>(TextureName);
-    }
 };
+
+public sealed class MobyDickTextureConditionalData
+{
+    public string Id
+    {
+        get => field ??= "MobyDickTextureConditionalData";
+        set => field = value;
+    }
+    public Rectangle? TextureRect { get; set; } = null;
+    public Season? Season { get; set; } = null;
+    public string? Condition { get; set; } = null;
+    public int Precedence { get; set; } = 0;
+}
 
 public sealed class MobyDickData
 {
@@ -38,6 +48,7 @@ public sealed class MobyDickData
     public int WiggleSegmentLength { get; set; } = 0;
     public float DrawScaleInTank { get; set; } = 4f;
     public string? AquariumTextureOverride { get; set; } = null;
+    public List<MobyDickTextureConditionalData>? AquariumTexturesConditional { get; set; } = null;
     public Rectangle AquariumTextureRect { get; set; } = Rectangle.Empty;
     public Vector2 HeldItemOriginOffset { get; set; } = Vector2.Zero;
     public float SwimVelocityMin { get; set; } = -1f;
@@ -55,17 +66,72 @@ public sealed class MobyDickData
     internal string? Key { get; set; } = null;
     internal AquariumFishData? AquariumFish { get; set; } = null;
 
-    internal Rectangle GetAquariumSourceRect(int currentFrame = -1, Texture2D? texture = null)
+    internal MobyDickTextureConditionalData? GetTextureConditionalData(GameLocation? location)
+    {
+        location ??= Game1.currentLocation;
+        Season season = location.GetSeason();
+        GameStateQueryContext context = new(location, null, null, null, Game1.random);
+        if (AquariumTexturesConditional != null && AquariumTexturesConditional.Count > 0)
+        {
+            IEnumerable<MobyDickTextureConditionalData> matchingCondTx = AquariumTexturesConditional
+                .Where(condTx =>
+                {
+                    if (condTx.Season != null && condTx.Season != season)
+                        return false;
+                    if (!GameStateQuery.CheckConditions(condTx.Condition, context))
+                        return false;
+                    return true;
+                })
+                .OrderBy(condTx => condTx.Precedence);
+            if (matchingCondTx.FirstOrDefault() is MobyDickTextureConditionalData firstCondTx)
+            {
+                return Random.Shared.ChooseFrom(
+                    matchingCondTx.Where(condTx => condTx.Precedence == firstCondTx.Precedence).ToList()
+                );
+            }
+        }
+        return null;
+    }
+
+    internal void GetTextureConditionalDataFields(
+        GameLocation? location,
+        out Texture2D texture,
+        out Rectangle textureRect
+    )
+    {
+        MobyDickTextureConditionalData? condTx = GetTextureConditionalData(location);
+        // string textureName = condTx?.Texture ?? AquariumFish?.TextureName ?? "LooseSprites\\AquariumFish";
+        string textureName = AquariumFish?.TextureName ?? "LooseSprites\\AquariumFish";
+        texture = Game1.content.Load<Texture2D>(textureName);
+        textureRect = condTx?.TextureRect ?? AquariumTextureRect;
+        if (textureRect.Width == 0)
+            textureRect = texture.Bounds;
+    }
+
+    internal void GetTextureConditionalDataFields_Frame0(
+        GameLocation? location,
+        out Texture2D texture,
+        out Rectangle sourceRect
+    )
+    {
+        GetTextureConditionalDataFields(location, out texture, out Rectangle textureRect);
+        sourceRect = GetAquariumSourceRect(textureRect);
+    }
+
+    internal Rectangle GetAquariumSourceRect(Rectangle textureRect, int currentFrame = -1)
     {
         if (AquariumFish == null || AquariumFish.IsErrorFish || SpriteSize.X == 0 || SpriteSize.Y == 0)
         {
             return new(0, 0, 16, 16);
         }
-        texture ??= AquariumFish.GetTexture();
         currentFrame = currentFrame == -1 ? AquariumFish.FishIndex : currentFrame;
-        int framePerRow = (AquariumTextureRect.Width > 0 ? AquariumTextureRect.Width : texture.Width) / SpriteSize.X;
-        int x = currentFrame % framePerRow * SpriteSize.X + AquariumTextureRect.X;
-        int y = currentFrame / framePerRow * SpriteSize.Y + AquariumTextureRect.Y;
+        int framePerRow = textureRect.Width / SpriteSize.X;
+        if (framePerRow == 0)
+        {
+            return new(0, 0, 16, 16);
+        }
+        int x = currentFrame % framePerRow * SpriteSize.X + textureRect.X;
+        int y = currentFrame / framePerRow * SpriteSize.Y + textureRect.Y;
         return new(x, y, SpriteSize.X, SpriteSize.Y);
     }
 
@@ -77,13 +143,9 @@ public sealed class MobyDickData
         foreach (string f in ArgUtility.SplitBySpace(animStr))
         {
             if (int.TryParse(f, out int frame))
-            {
                 animFrames.Add(frame);
-            }
             else
-            {
                 return null;
-            }
         }
         return animFrames;
     }
@@ -145,6 +207,11 @@ internal static class AssetManager
     {
         helper.Events.Content.AssetRequested += OnAssetRequested;
         helper.Events.Content.AssetsInvalidated += OnAssetInvalidated;
+    }
+
+    internal static bool TryGet(string itemId, [NotNullWhen(true)] out MobyDickData? data)
+    {
+        return MBData.TryGetValue(itemId, out data) && data.AquariumFish is AquariumFishData aqf && !aqf.IsErrorFish;
     }
 
     private static void OnAssetRequested(object? sender, AssetRequestedEventArgs e)

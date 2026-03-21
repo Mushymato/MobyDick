@@ -22,6 +22,8 @@ public sealed class ModEntry : Mod
     {
         mon = Monitor;
 
+        DynamicMethods.Make();
+
         Harmony harmony = new(ModId);
         Framework.Patches.Patch(helper, harmony);
 

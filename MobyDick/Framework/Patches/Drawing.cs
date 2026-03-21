@@ -87,6 +87,7 @@ internal static partial class Patches
                     typeof(GameLocation),
                     nameof(GameLocation.UpdateWhenCurrentLocation)
                 ),
+                prefix: new HarmonyMethod(typeof(Patches), nameof(GameLocation_UpdateWhenCurrentLocation_Prefix)),
                 postfix: new HarmonyMethod(typeof(Patches), nameof(GameLocation_UpdateWhenCurrentLocation_Postfix))
             );
             // held above head
@@ -110,10 +111,7 @@ internal static partial class Patches
             // fish pond jumping fish
             harmony.Patch(
                 original: AccessTools.DeclaredMethod(typeof(JumpingFish), nameof(JumpingFish.Draw)),
-                prefix: new HarmonyMethod(typeof(Patches), nameof(JumpingFish_Draw_Postfix))
-                {
-                    priority = Priority.Last,
-                }
+                prefix: new HarmonyMethod(typeof(Patches), nameof(JumpingFish_Draw_Prefix)) { priority = Priority.Last }
             );
         }
         catch (Exception err)
@@ -236,15 +234,12 @@ internal static partial class Patches
     {
         if (IsInMenuDraw)
             return;
-        if (
-            smokedFish.GetPreservedItemId() is not string preserveId
-            || !TryGetMBData(preserveId, out MobyDickData? data, out AquariumFishData? aqf)
-        )
-            return;
-        texture = Game1.content.Load<Texture2D>(aqf.TextureName);
-        sourceRect = data.GetAquariumSourceRect();
-        origin = new(sourceRect.Width / 2f, sourceRect.Height / 2f);
-        return;
+        if (FishWatcher.GetSmokedFishPickedCondTx(smokedFish) is PickedCondTx pickTx)
+        {
+            texture = pickTx.Texture;
+            sourceRect = pickTx.SourceRect;
+            origin = new(sourceRect.Width / 2f, sourceRect.Height / 2f);
+        }
     }
 
     private static IEnumerable<CodeInstruction> ColoredObject_drawSmokedFish_Transpiler(
@@ -324,26 +319,13 @@ internal static partial class Patches
         }
     }
 
-    private static void ModifyFishTAS(
-        MobyDickData data,
-        AquariumFishData aqf,
-        Texture2D tankFishTx,
-        ParsedItemData parsedOrErrorData,
-        TemporaryAnimatedSprite anim
-    )
+    private static void ModifyFishTAS(TemporaryAnimatedSprite anim, Texture2D texture, Rectangle sourceRect)
     {
-        if (
-            anim.textureName == parsedOrErrorData.TextureName
-            && anim.sourceRect.Width == 16
-            && anim.sourceRect.Height == 16
-        )
-        {
-            anim.textureName = aqf.TextureName;
-            anim.texture = tankFishTx;
-            anim.sourceRect = data.GetAquariumSourceRect();
-            anim.position.X -= (anim.sourceRect.Width - 16) * anim.scale / 2;
-            anim.position.X -= (anim.sourceRect.Height - 16) * anim.scale / 2;
-        }
+        anim.texture = texture;
+        anim.textureName = texture.Name;
+        anim.sourceRect = sourceRect;
+        anim.position.X -= (anim.sourceRect.Width - 16) * anim.scale / 2;
+        anim.position.X -= (anim.sourceRect.Height - 16) * anim.scale / 2;
     }
 
     private static IEnumerable<CodeInstruction> Furniture_draw_Transpiler(
@@ -414,14 +396,13 @@ internal static partial class Patches
         if (
             furniture.heldObject.Value is not ColoredObject
             && furniture.heldObject.Value is not Furniture
-            && TryGetMBData(furniture.heldObject.Value.ItemId, out MobyDickData? data, out AquariumFishData? aqf)
+            && FishWatcher.GetSObjectPickedCondTx(furniture.heldObject.Value) is PickedCondTx pickTx
         )
         {
-            //spriteBatch.Draw(heldItemData.GetTexture(), Game1.GlobalToLocal(Game1.viewport, new Vector2(base.boundingBox.Center.X - 32, base.boundingBox.Center.Y - (this.drawHeldObjectLow.Value ? 32 : 85))), heldItemData.GetSourceRect(), Color.White * alpha, 0f, Vector2.Zero, 4f, SpriteEffects.None, (float)(base.boundingBox.Bottom + 1) / 10000f);
-            Rectangle sourceRect = data.GetAquariumSourceRect();
+            Rectangle sourceRect = pickTx.SourceRect;
             Vector2 origin = new(sourceRect.Width / 2, sourceRect.Height / 2);
             spriteBatch.Draw(
-                aqf.GetTexture(),
+                pickTx.Texture,
                 Game1.GlobalToLocal(
                     Game1.viewport,
                     new Vector2(
@@ -442,7 +423,7 @@ internal static partial class Patches
         return false;
     }
 
-    private static bool JumpingFish_Draw_Postfix(
+    private static bool JumpingFish_Draw_Prefix(
         SpriteBatch b,
         SObject ____fishObject,
         float ___angle,
@@ -456,7 +437,9 @@ internal static partial class Patches
         ItemMetadata itemMetadata = ItemRegistry.GetMetadata(____fishObject.QualifiedItemId);
         if (itemMetadata.TypeIdentifier != "(O)")
             return true;
-        if (!TryGetMBData(itemMetadata.LocalItemId, out MobyDickData? data, out AquariumFishData? aqf))
+        if (FishWatcher.GetSObjectPickedCondTx(____fishObject) is not PickedCondTx pickTx)
+            return true;
+        if (!AssetManager.TryGet(itemMetadata.LocalItemId, out MobyDickData? data))
             return true;
 
         float angle = ___angle;
@@ -467,13 +450,13 @@ internal static partial class Patches
             angle *= -1f;
         }
         float scaleMod = data.DrawScaleInTank;
-        Rectangle sourceRect = data.GetAquariumSourceRect();
+        Rectangle sourceRect = pickTx.SourceRect;
         float originW = MathF.Min(sourceRect.Width, sourceRect.Height) / 2;
         Vector2 origin = new(sourceRect.Width - originW, originW);
         Vector2 globalPosition =
             ___position + new Vector2(0f, (float)Math.Sin((double)(____age / ___jumpTime) * Math.PI) * -___jumpHeight);
         b.Draw(
-            aqf.GetTexture(),
+            pickTx.Texture,
             Game1.GlobalToLocal(Game1.viewport, globalPosition),
             sourceRect,
             Color.White,
@@ -505,11 +488,13 @@ internal static partial class Patches
     )
     {
         ItemMetadata itemMetadata = ItemRegistry.GetMetadata(__instance.QualifiedItemId);
-        if (itemMetadata.TypeIdentifier != "(O)")
+        if (itemMetadata.TypeIdentifier != "(O)" || __instance is not SObject obj)
             return true;
-        if (!TryGetMBData(itemMetadata.LocalItemId, out MobyDickData? data, out AquariumFishData? aqf))
+        if (FishWatcher.GetSObjectPickedCondTx(obj) is not PickedCondTx pickTx)
             return true;
-        Rectangle sourceRect = data.GetAquariumSourceRect();
+        if (!AssetManager.TryGet(itemMetadata.LocalItemId, out MobyDickData? data))
+            return true;
+        Rectangle sourceRect = pickTx.SourceRect;
         Vector2 drawPos = new(objectPosition.X + 32, objectPosition.Y + 32);
         Vector2 origin = new(sourceRect.Width / 2, sourceRect.Height / 2);
         origin.Y += data.HeldItemOriginOffset.Y;
@@ -525,7 +510,7 @@ internal static partial class Patches
             origin.X += data.HeldItemOriginOffset.X;
         }
         spriteBatch.Draw(
-            aqf.GetTexture(),
+            pickTx.Texture,
             drawPos,
             sourceRect,
             Color.White,
@@ -538,27 +523,13 @@ internal static partial class Patches
         return false;
     }
 
-    private static bool TryGetMBData(
-        string itemId,
-        [NotNullWhen(true)] out MobyDickData? data,
-        [NotNullWhen(true)] out AquariumFishData? aqf
-    )
-    {
-        aqf = null;
-        return AssetManager.MBData.TryGetValue(itemId, out data)
-            && (aqf = data.AquariumFish) is not null
-            && !aqf.IsErrorFish;
-    }
-
     private static void FishingRod_Draw_ReplaceVars(FishingRod rod, ref Texture2D texture, ref Rectangle sourceRect)
     {
-        if (rod.whichFish.TypeIdentifier != "(O)")
-            return;
-        if (!TryGetMBData(rod.whichFish.LocalItemId, out MobyDickData? data, out AquariumFishData? aqf))
-            return;
-        texture = Game1.content.Load<Texture2D>(aqf.TextureName);
-        sourceRect = data.GetAquariumSourceRect();
-        return;
+        if (FishWatcher.GetFishingRodHeldUp(rod) is PickedCondTx pickTx)
+        {
+            texture = pickTx.Texture;
+            sourceRect = pickTx.SourceRect;
+        }
     }
 
     private static Vector2 FishingRod_Draw_ReplaceOrigin(Vector2 existing, ref Rectangle sourceRect)
@@ -675,70 +646,93 @@ internal static partial class Patches
         }
     }
 
-    private static void GameLocation_UpdateWhenCurrentLocation_Postfix(GameLocation __instance)
+    private static void GameLocation_UpdateWhenCurrentLocation_Prefix(GameLocation __instance, ref int __state)
     {
+        __state = int.MaxValue;
         if (string.IsNullOrEmpty(__instance.fishFrenzyFish.Value))
-        {
             return;
-        }
+        __state = __instance.TemporarySprites.Count;
+    }
+
+    private static void GameLocation_UpdateWhenCurrentLocation_Postfix(GameLocation __instance, ref int __state)
+    {
+        if (__state == int.MaxValue)
+            return;
 
         if (
-            ItemRegistry.GetData(__instance.fishFrenzyFish.Value) is not ParsedItemData parsedOrErrorData
-            || !TryGetMBData(parsedOrErrorData.ItemId, out MobyDickData? data, out AquariumFishData? aqf)
+            string.IsNullOrEmpty(__instance.fishFrenzyFish.Value)
+            || ItemRegistry.GetData(__instance.fishFrenzyFish.Value) is not ParsedItemData parsedOrErrorData
+            || !AssetManager.TryGet(parsedOrErrorData.ItemId, out MobyDickData? data)
         )
             return;
 
-        Texture2D tankFishTx = aqf.GetTexture();
-
-        foreach (TemporaryAnimatedSprite anim in __instance.TemporarySprites.Reverse())
+        List<TemporaryAnimatedSprite> animNeedsModification = [];
+        for (int i = __state; i < __instance.temporarySprites.Count; i++)
         {
-            if (anim.id >= 982648)
+            TemporaryAnimatedSprite anim = __instance.temporarySprites[i];
+            if (
+                anim.id >= 982648
+                && anim.textureName == parsedOrErrorData.TextureName
+                && anim.sourceRect.Width == 16
+                && anim.sourceRect.Height == 16
+                && anim.initialPosition == anim.position
+            )
             {
-                ModifyFishTAS(data, aqf, tankFishTx, parsedOrErrorData, anim);
+                animNeedsModification.Add(anim);
             }
-            else
-            {
-                break;
-            }
+        }
+
+        if (!animNeedsModification.Any())
+            return;
+
+        data.GetTextureConditionalDataFields_Frame0(__instance, out Texture2D texture, out Rectangle sourceRect);
+        foreach (TemporaryAnimatedSprite anim in animNeedsModification)
+        {
+            ModifyFishTAS(anim, texture, sourceRect);
         }
     }
 
     private static void Farmer_showEatingItem_Prefix(Farmer who, ref int __state)
     {
-        __state = -1;
-        if (who.tempFoodItemTextureName.Value != null || who.itemToEat == null)
+        __state = int.MaxValue;
+        if (
+            who.tempFoodItemTextureName.Value != null
+            || who.itemToEat == null
+            || who.itemToEat.TypeDefinitionId != "(O)"
+        )
             return;
         __state = who.currentLocation.temporarySprites.Count;
     }
 
     private static void Farmer_showEatingItem_Postfix(Farmer who, ref int __state)
     {
-        if (__state == -1)
+        if (__state >= who.currentLocation.temporarySprites.Count)
             return;
-        if (!TryGetMBData(who.itemToEat.ItemId, out MobyDickData? data, out AquariumFishData? aqf))
+        if (!AssetManager.TryGet(who.itemToEat.ItemId, out MobyDickData? data))
             return;
 
-        Texture2D tankFishTx = aqf.GetTexture();
-        ParsedItemData parsedOrErrorData = ItemRegistry.GetData(who.itemToEat.QualifiedItemId);
+        data.GetTextureConditionalDataFields_Frame0(
+            who.currentLocation,
+            out Texture2D texture,
+            out Rectangle sourceRect
+        );
         for (int i = __state; i < who.currentLocation.temporarySprites.Count; i++)
         {
             TemporaryAnimatedSprite anim = who.currentLocation.temporarySprites[i];
-            ModifyFishTAS(data, aqf, tankFishTx, parsedOrErrorData, anim);
+            if (anim.sourceRect.Width == 16 && anim.sourceRect.Height == 16)
+                ModifyFishTAS(anim, texture, sourceRect);
         }
     }
 
-    private static void FishingRod_doPullFishFromWater_Postfix(FishingRod __instance, ItemMetadata ___whichFish)
+    private static void FishingRod_doPullFishFromWater_Postfix(FishingRod __instance)
     {
-        if (___whichFish.TypeIdentifier != "(O)")
-            return;
-        if (!TryGetMBData(___whichFish.LocalItemId, out MobyDickData? data, out AquariumFishData? aqf))
-            return;
-
-        Texture2D tankFishTx = aqf.GetTexture();
-        ParsedItemData parsedOrErrorData = ___whichFish.GetParsedOrErrorData();
-        foreach (TemporaryAnimatedSprite anim in __instance.animations)
+        PickedCondTx? pickTx = FishWatcher.GetFishingRodHeldUp(__instance);
+        if (pickTx != null)
         {
-            ModifyFishTAS(data, aqf, tankFishTx, parsedOrErrorData, anim);
+            foreach (TemporaryAnimatedSprite anim in __instance.animations)
+            {
+                ModifyFishTAS(anim, pickTx.Texture, pickTx.SourceRect);
+            }
         }
     }
 
@@ -817,8 +811,6 @@ internal static partial class Patches
             matcher
                 .Advance(1)
                 .Insert([
-                    new(OpCodes.Ldarg_0),
-                    new(OpCodes.Ldfld, AccessTools.Field(typeof(TankFish), "_texture")),
                     new(OpCodes.Ldarg_1),
                     new(OpCodes.Ldarg_2),
                     new(OpCodes.Ldarg_3),
@@ -861,8 +853,6 @@ internal static partial class Patches
                     .MatchStartBackwards(ldarg1Match)
                     .Insert([
                         new(OpCodes.Ldarg_0),
-                        new(OpCodes.Ldarg_0),
-                        new(OpCodes.Ldfld, AccessTools.Field(typeof(TankFish), "_texture")),
                         new(OpCodes.Ldarg_1),
                         new(OpCodes.Ldarg_2),
                         new(OpCodes.Ldarg_3),
@@ -883,13 +873,7 @@ internal static partial class Patches
     internal static Type? visibleFishCustomFish;
     internal static FieldInfo? showFishInWater_CustomFish_alpha = null;
 
-    private static bool TankFish_DrawOverride(
-        TankFish fish,
-        Texture2D texture,
-        SpriteBatch b,
-        float alpha,
-        float draw_layer
-    )
+    private static bool TankFish_DrawOverride(TankFish fish, SpriteBatch b, float alpha, float draw_layer)
     {
         if (FishWatcher.GetTankFishDrawOverride(fish) is not TankFishDrawOverride drawOverride)
         {
@@ -899,7 +883,7 @@ internal static partial class Patches
         {
             alpha = (float)(showFishInWater_CustomFish_alpha.GetValue(fish) ?? alpha);
         }
-        drawOverride.Draw(texture, b, alpha, draw_layer);
+        drawOverride.Draw(b, alpha, draw_layer);
         return true;
     }
 }

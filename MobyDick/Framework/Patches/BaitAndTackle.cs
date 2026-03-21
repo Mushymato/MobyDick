@@ -16,7 +16,7 @@ internal static partial class Patches
     private const string GSQ_HAS_BAIT = $"{ModEntry.ModId}_HAS_BAIT";
     private const string GSQ_HAS_TACKLE = $"{ModEntry.ModId}_HAS_TACKLE";
 
-    internal static void Patch_BaitAndTackle(IModHelper helper, Harmony harmony)
+    internal static void Patch_BaitAndTackle(Harmony harmony)
     {
         try
         {

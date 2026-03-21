@@ -8,6 +8,6 @@ internal static partial class Patches
     internal static void Patch(IModHelper helper, Harmony harmony)
     {
         Patch_Drawing(helper, harmony);
-        Patch_BaitAndTackle(helper, harmony);
+        Patch_BaitAndTackle(harmony);
     }
 }

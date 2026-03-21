@@ -47,6 +47,21 @@ internal static partial class Patches
 
         try
         {
+            // change turnaround logic and adjust swiming
+            harmony.Patch(
+                original: AccessTools.DeclaredMethod(typeof(TankFish), nameof(TankFish.Update)),
+                prefix: new HarmonyMethod(typeof(Patches), nameof(TankFish_Update_Prefix)),
+                postfix: new HarmonyMethod(typeof(Patches), nameof(TankFish_Update_Postfix))
+            );
+        }
+        catch (Exception err)
+        {
+            ModEntry.Log($"Error in Patch_Drawing(ctor):\n{err}", LogLevel.Error);
+            return;
+        }
+
+        try
+        {
             // change how fish looks in other scenarios
 
             // fished up from water
@@ -107,7 +122,6 @@ internal static partial class Patches
             return;
         }
 
-        helper.Events.GameLoop.ReturnedToTitle += OnReturnedToTitle;
         helper.Events.Display.RenderingHud += OnRenderingHud;
         helper.Events.Display.RenderedHud += OnRenderedHud;
         helper.Events.Display.RenderingActiveMenu += OnRenderingActiveMenu;
@@ -740,7 +754,7 @@ internal static partial class Patches
         ref float __state
     )
     {
-        if (GetTankFishDrawOverride(__instance) is not TankFishDrawOverride drawOverride)
+        if (FishWatcher.GetTankFishDrawOverride(__instance) is not TankFishDrawOverride drawOverride)
         {
             return;
         }
@@ -755,7 +769,7 @@ internal static partial class Patches
 
     private static void VisibleFish_Update_Postfix(TankFish __instance, GameTime time, ref float __state)
     {
-        if (GetTankFishDrawOverride(__instance) is not TankFishDrawOverride drawOverride)
+        if (FishWatcher.GetTankFishDrawOverride(__instance) is not TankFishDrawOverride drawOverride)
         {
             return;
         }
@@ -768,7 +782,7 @@ internal static partial class Patches
         ref FishTankFurniture ____tank
     )
     {
-        if (GetTankFishDrawOverride(__instance) is not TankFishDrawOverride drawOverride)
+        if (FishWatcher.GetTankFishDrawOverride(__instance) is not TankFishDrawOverride drawOverride)
         {
             return;
         }
@@ -866,21 +880,6 @@ internal static partial class Patches
         }
     }
 
-    private static readonly ConditionalWeakTable<TankFish, TankFishDrawOverride?> TankFishDrawOverrides = [];
-
-    private static TankFishDrawOverride? GetTankFishDrawOverride(TankFish fish) =>
-        TankFishDrawOverrides.GetValue(fish, TankFishDrawOverride.Create);
-
-    private static void OnReturnedToTitle(object? sender, ReturnedToTitleEventArgs e)
-    {
-        ClearTankFishDrawOverrides();
-    }
-
-    internal static void ClearTankFishDrawOverrides()
-    {
-        TankFishDrawOverrides.Clear();
-    }
-
     internal static Type? visibleFishCustomFish;
     internal static FieldInfo? showFishInWater_CustomFish_alpha = null;
 
@@ -892,7 +891,7 @@ internal static partial class Patches
         float draw_layer
     )
     {
-        if (GetTankFishDrawOverride(fish) is not TankFishDrawOverride drawOverride)
+        if (FishWatcher.GetTankFishDrawOverride(fish) is not TankFishDrawOverride drawOverride)
         {
             return false;
         }

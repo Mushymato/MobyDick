@@ -160,11 +160,11 @@ internal static class AssetManager
         if (e.NamesWithoutLocale.Any(name => name.IsEquivalentTo(AssetName_MobyDickData)))
         {
             mbData = null;
-            Patches.ClearTankFishDrawOverrides();
+            FishWatcher.ClearTankFishDrawOverrides();
         }
         else if (e.NamesWithoutLocale.Any(name => name.IsEquivalentTo("Data\\AquariumFish")) && mbData != null)
         {
-            Patches.ClearTankFishDrawOverrides();
+            FishWatcher.ClearTankFishDrawOverrides();
             DelayedAction.functionAfterDelay(
                 () =>
                 {

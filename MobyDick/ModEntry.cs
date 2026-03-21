@@ -21,10 +21,13 @@ public sealed class ModEntry : Mod
     public override void Entry(IModHelper helper)
     {
         mon = Monitor;
+
         Harmony harmony = new(ModId);
-        AssetManager.Register(helper);
-        GameDelegates.Register(helper);
         Framework.Patches.Patch(helper, harmony);
+
+        FishWatcher.Register(helper);
+        GameDelegates.Register();
+        AssetManager.Register(helper);
     }
 
     /// <summary>SMAPI static monitor Log wrapper</summary>

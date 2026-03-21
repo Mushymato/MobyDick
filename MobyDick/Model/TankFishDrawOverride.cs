@@ -29,6 +29,8 @@ internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data)
         return null;
     }
 
+    internal Item? FishItem { get; set; } = null;
+
     private Vector2 origin = new(Data.SpriteSize.X / 2f, Data.SpriteSize.Y / 2f);
     public double currentFrameTime = 0f;
     private int currentAnimationFrame = Data.SwimAnimation?.Count > 0 ? 0 : -1;

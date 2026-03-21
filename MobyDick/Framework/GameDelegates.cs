@@ -13,7 +13,7 @@ internal static class GameDelegates
     private const string Action_FishFrenzy = $"{ModEntry.ModId}_FishFrenzy";
     private static FieldInfo? fishSplashPointTime = null;
 
-    internal static void Register(IModHelper helper)
+    internal static void Register()
     {
         TriggerActionManager.RegisterAction(Action_FishFrenzy, DoFishFrenzy);
         fishSplashPointTime = typeof(GameLocation).GetField("fishSplashPointTime");

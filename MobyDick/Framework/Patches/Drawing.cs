@@ -47,21 +47,6 @@ internal static partial class Patches
 
         try
         {
-            // change turnaround logic and adjust swiming
-            harmony.Patch(
-                original: AccessTools.DeclaredMethod(typeof(TankFish), nameof(TankFish.Update)),
-                prefix: new HarmonyMethod(typeof(Patches), nameof(TankFish_Update_Prefix)),
-                postfix: new HarmonyMethod(typeof(Patches), nameof(TankFish_Update_Postfix))
-            );
-        }
-        catch (Exception err)
-        {
-            ModEntry.Log($"Error in Patch_Drawing(ctor):\n{err}", LogLevel.Error);
-            return;
-        }
-
-        try
-        {
             // change how fish looks in other scenarios
 
             // fished up from water

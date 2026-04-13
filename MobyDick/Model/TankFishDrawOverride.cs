@@ -2,7 +2,11 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Objects;
-using TankFishType = StardewValley.Objects.TankFish.FishType;
+#if SDV16
+using FishType = StardewValley.Objects.TankFish.FishType;
+#else
+using StardewValley.Objects.FishTanks;
+#endif
 
 namespace MobyDick.Model;
 
@@ -40,7 +44,7 @@ internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data, Te
         float scale = Fish.GetScale() * Data.DrawScaleInTank;
         float heightVariance = Fish.fishType switch
         {
-            TankFishType.Eel or TankFishType.Crawl or TankFishType.Ground or TankFishType.Static => 0f,
+            FishType.Eel or FishType.Crawl or FishType.Ground or FishType.Static => 0f,
             _ => (float)
                 Math.Sin(Game1.currentGameTime.TotalGameTime.TotalSeconds * 1.25 + (double)(Fish.position.X / 32f))
                 * 2f,
@@ -55,7 +59,7 @@ internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data, Te
             drawPos += new Vector2(0f, heightVariance * scale);
 
         SpriteEffects flip = Fish.facingLeft ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
-        bool isEel = Fish.fishType == TankFishType.Eel;
+        bool isEel = Fish.fishType == FishType.Eel;
 
         int wiggleLen = Data.WiggleSegmentLength;
 
@@ -128,13 +132,13 @@ internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data, Te
         Vector2 size = new(Data.SpriteSize.X, Data.SpriteSize.Y * 9f / 16);
         float scaleFactor = 4f * Fish.GetScale();
         size *= scaleFactor;
-        TankFishType fishType = Fish.fishType;
+        FishType fishType = Fish.fishType;
         Vector2 position = Fish.position;
         float div =
-            fishType == TankFishType.Crawl
-            || fishType == TankFishType.Ground
-            || fishType == TankFishType.Static
-            || fishType == TankFishType.Hop
+            fishType == FishType.Crawl
+            || fishType == FishType.Ground
+            || fishType == FishType.Static
+            || fishType == FishType.Hop
                 ? 1f
                 : 2f;
         return new Rectangle(

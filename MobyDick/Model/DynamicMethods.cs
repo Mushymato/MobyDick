@@ -1,6 +1,11 @@
 using System.Reflection.Emit;
 using HarmonyLib;
 using StardewValley.Objects;
+#if SDV16
+using TankFishType = StardewValley.Objects.TankFish.FishType;
+#else
+using StardewValley.Objects.FishTanks;
+#endif
 
 namespace MobyDick.Model;
 

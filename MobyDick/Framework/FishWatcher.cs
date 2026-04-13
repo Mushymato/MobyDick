@@ -7,6 +7,11 @@ using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley.Objects;
 using StardewValley.Tools;
+#if SDV16
+using FishType = StardewValley.Objects.TankFish.FishType;
+#else
+using StardewValley.Objects.FishTanks;
+#endif
 
 namespace MobyDick.Framework;
 

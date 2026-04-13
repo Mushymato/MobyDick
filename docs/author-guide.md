@@ -14,7 +14,7 @@ The key is the (unqualified) item id of the fish.
 | ----- | ---- | ------- | ----------- |
 | SpriteSize | Point | `24,24` | Size of each animation frame. All frame calculations use this size, including the animations from `Data/AquariumFish` as well as SwimAnimation on this asset. |
 | RotateByVelocity | bool | `false` | Whether the sprite should tilt forward when they move fast. This emulates floater behavior. |
-| WiggleSegmentLength | int | `0` | If this is more than 0, slice the sprite up into segments of this lenght and wiggle them according to speed. This emulates how vanilla fish sprites "swim". |
+| WiggleSegmentLength | int | `0` | If this is more than 0, slice the sprite up into segments of this length and wiggle them according to speed. This emulates how vanilla fish sprites "swim". |
 | DrawScaleInTank | float | `4.0` | The draw scale of the fish when placed in tank. Can set a smaller number here but bigger sprite size for HD fish. |
 | AquariumTextureOverride | string | _null_ | Replace the aquarium texture with texture at this path. You can specify the texture in `Data/AquariumFish`, but this provides a shortcut. |
 | AquariumTextureRect | Rectangle | _empty_ | Decide which area of the aquarium texture to treat as the bounds of the texture in general, which is then used for frame calculations. If this is empty, then the texture's bounds is used. |

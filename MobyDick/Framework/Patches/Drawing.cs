@@ -1,7 +1,5 @@
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -13,6 +11,11 @@ using StardewValley.Buildings;
 using StardewValley.ItemTypeDefinitions;
 using StardewValley.Objects;
 using StardewValley.Tools;
+#if SDV16
+using FishType = StardewValley.Objects.TankFish.FishType;
+#else
+using StardewValley.Objects.FishTanks;
+#endif
 
 namespace MobyDick.Framework;
 
@@ -419,12 +422,12 @@ internal static partial class Patches
         float ___jumpHeight
     )
     {
-        ItemMetadata itemMetadata = ItemRegistry.GetMetadata(____fishObject.QualifiedItemId);
-        if (itemMetadata.TypeIdentifier != "(O)")
+        ItemMetadata? itemMetadata = ItemRegistry.GetMetadata(____fishObject.QualifiedItemId);
+        if (itemMetadata?.TypeIdentifier != "(O)")
             return true;
         if (FishWatcher.GetSObjectPickedCondTx(____fishObject) is not PickedCondTx pickTx)
             return true;
-        if (!AssetManager.TryGet(itemMetadata.LocalItemId, out MobyDickData? data))
+        if (!AssetManager.TryGet(itemMetadata?.LocalItemId, out MobyDickData? data))
             return true;
 
         float angle = ___angle;
@@ -472,8 +475,8 @@ internal static partial class Patches
         Farmer f
     )
     {
-        ItemMetadata itemMetadata = ItemRegistry.GetMetadata(__instance.QualifiedItemId);
-        if (itemMetadata.TypeIdentifier != "(O)" || __instance is not SObject obj)
+        ItemMetadata? itemMetadata = ItemRegistry.GetMetadata(__instance.QualifiedItemId);
+        if (itemMetadata?.TypeIdentifier != "(O)" || __instance is not SObject obj)
             return true;
         if (FishWatcher.GetSObjectPickedCondTx(obj) is not PickedCondTx pickTx)
             return true;
@@ -739,7 +742,7 @@ internal static partial class Patches
         }
         if (____tank.GetTankBounds().Width <= (drawOverride.Data.SpriteSize.X * __instance.GetScale() * 4f))
         {
-            if (__instance.fishType == TankFish.FishType.Float)
+            if (__instance.fishType == FishType.Float)
                 __instance.velocity.X = 0;
             __instance.facingLeft = false;
         }

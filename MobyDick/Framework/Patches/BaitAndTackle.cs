@@ -57,7 +57,7 @@ internal static partial class Patches
     private static bool HAS_BAIT(string[] query, GameStateQueryContext context)
     {
         if (
-            !ArgUtility.TryGet(query, 1, out string? baitId, out string error, name: "string baitId")
+            !ArgUtility.TryGet(query, 1, out string? baitId, out string? error, name: "string baitId")
             || !ArgUtility.TryGetOptional(
                 query,
                 2,

@@ -163,7 +163,7 @@ public sealed class MobyDickData
         if (string.IsNullOrEmpty(AquariumTextureOverride))
         {
             sourceIdx = ArgUtility.GetInt(tankFishParts, 0, 0);
-            tankFishTxName = ArgUtility.Get(tankFishParts, 6);
+            tankFishTxName = ArgUtility.Get(tankFishParts, 6) ?? "LooseSprites\\AquariumFish";
         }
         else
         {
@@ -209,8 +209,11 @@ internal static class AssetManager
         helper.Events.Content.AssetsInvalidated += OnAssetInvalidated;
     }
 
-    internal static bool TryGet(string itemId, [NotNullWhen(true)] out MobyDickData? data)
+    internal static bool TryGet(string? itemId, [NotNullWhen(true)] out MobyDickData? data)
     {
+        data = null;
+        if (itemId == null)
+            return false;
         return MBData.TryGetValue(itemId, out data) && data.AquariumFish is AquariumFishData aqf && !aqf.IsErrorFish;
     }
 

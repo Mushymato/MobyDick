@@ -17,7 +17,7 @@ internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data, Te
 
     internal static TankFishDrawOverride? Create(TankFish fish)
     {
-        if (AssetManager.TryGet(fish.fishItemId, out MobyDickData? data) && data.SpriteSize.X > 0)
+        if (AssetManager.TryGetFish(fish.fishItemId, out MobyDickData? data) && data.SpriteSize.X > 0)
         {
             if (data.MinimumVelocity >= 0f)
             {

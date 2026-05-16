@@ -34,7 +34,7 @@ internal static class FishWatcher
             {
                 if (
                     fish.GetPreservedItemId() is not string preserveId
-                    || !AssetManager.TryGet(preserveId, out MobyDickData? data)
+                    || !AssetManager.TryGetFish(preserveId, out MobyDickData? data)
                 )
                     return null;
                 data.GetTextureConditionalDataFields_Frame0(
@@ -55,7 +55,7 @@ internal static class FishWatcher
             {
                 if (fish.TypeDefinitionId != "(O)")
                     return null;
-                if (!AssetManager.TryGet(fish.ItemId, out MobyDickData? data))
+                if (!AssetManager.TryGetFish(fish.ItemId, out MobyDickData? data))
                     return null;
                 data.GetTextureConditionalDataFields_Frame0(
                     fish.Location,
@@ -73,7 +73,7 @@ internal static class FishWatcher
     {
         if (
             rod.whichFish.TypeIdentifier != "(O)"
-            || !AssetManager.TryGet(rod.whichFish.LocalItemId, out MobyDickData? data)
+            || !AssetManager.TryGetFish(rod.whichFish.LocalItemId, out MobyDickData? data)
         )
             return null;
         string id = string.Concat(rod.GetHashCode().ToString(), rod.whichFish.LocalItemId);

@@ -427,7 +427,7 @@ internal static partial class Patches
             return true;
         if (FishWatcher.GetSObjectPickedCondTx(____fishObject) is not PickedCondTx pickTx)
             return true;
-        if (!AssetManager.TryGet(itemMetadata?.LocalItemId, out MobyDickData? data))
+        if (!AssetManager.TryGetFish(itemMetadata?.LocalItemId, out MobyDickData? data))
             return true;
 
         float angle = ___angle;
@@ -480,7 +480,7 @@ internal static partial class Patches
             return true;
         if (FishWatcher.GetSObjectPickedCondTx(obj) is not PickedCondTx pickTx)
             return true;
-        if (!AssetManager.TryGet(itemMetadata.LocalItemId, out MobyDickData? data))
+        if (!AssetManager.TryGetFish(itemMetadata.LocalItemId, out MobyDickData? data))
             return true;
         Rectangle sourceRect = pickTx.SourceRect;
         Vector2 drawPos = new(objectPosition.X + 32, objectPosition.Y + 32);
@@ -650,7 +650,7 @@ internal static partial class Patches
         if (
             string.IsNullOrEmpty(__instance.fishFrenzyFish.Value)
             || ItemRegistry.GetData(__instance.fishFrenzyFish.Value) is not ParsedItemData parsedOrErrorData
-            || !AssetManager.TryGet(parsedOrErrorData.ItemId, out MobyDickData? data)
+            || !AssetManager.TryGetFish(parsedOrErrorData.ItemId, out MobyDickData? data)
         )
             return;
 
@@ -696,7 +696,7 @@ internal static partial class Patches
     {
         if (__state >= who.currentLocation.temporarySprites.Count)
             return;
-        if (!AssetManager.TryGet(who.itemToEat.ItemId, out MobyDickData? data))
+        if (!AssetManager.TryGetFish(who.itemToEat.ItemId, out MobyDickData? data))
             return;
 
         data.GetTextureConditionalDataFields_Frame0(

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
+  <!-- <PropertyGroup>
     <SDV>17</SDV>
-  </PropertyGroup>
+  </PropertyGroup> -->
   <Import
     Project="$(MSBuildUserExtensionsPath)/sdv.props"
     Condition="Exists('$(MSBuildUserExtensionsPath)/sdv.props')"

@@ -51,6 +51,10 @@ internal static class AssetManager
         {
             e.LoadFrom(() => new Dictionary<string, MobyDickData>(), AssetLoadPriority.Exclusive);
         }
+        else if (e.NameWithoutLocale.IsEquivalentTo(AssetName_TankData))
+        {
+            e.LoadFrom(() => new Dictionary<string, LocationalTankData>(), AssetLoadPriority.Exclusive);
+        }
     }
 
     private static void OnAssetInvalidated(object? sender, AssetsInvalidatedEventArgs e)

@@ -17,6 +17,10 @@
     {
       "Action": "Include",
       "FromFile": "data/octo.json"
+    },
+    {
+      "Action": "Include",
+      "FromFile": "data/location_tanks.json"
     }
   ]
 }

@@ -27,9 +27,10 @@ public sealed class ModEntry : Mod
         Harmony harmony = new(ModId);
         Framework.Patches.Patch(helper, harmony);
 
+        AssetManager.Register(helper);
         FishWatcher.Register(helper);
         GameDelegates.Register();
-        AssetManager.Register(helper);
+        LocationalFishTankManager.Register(helper);
     }
 
     /// <summary>SMAPI static monitor Log wrapper</summary>

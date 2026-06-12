@@ -90,6 +90,9 @@ internal static partial class Patches
             harmony.Patch(
                 original: AccessTools.DeclaredMethod(typeof(Furniture), nameof(Furniture.draw)),
                 transpiler: new HarmonyMethod(typeof(Patches), nameof(Furniture_draw_Transpiler))
+                {
+                    priority = Priority.First,
+                }
             );
             // smoked
             harmony.Patch(

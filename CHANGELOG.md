@@ -13,12 +13,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 ### Fixed
 - Increased priority on the furniture transpiler
 
-## [0.6.0] - 2025-03-19
+## [0.6.0] - 2026-03-19
 
 ### Added
 - New fields related to swim behavior (SwimVelocityMin SwimVelocityMax SwimCooldownMin SwimCooldownMax MinimumVelocity MinimumVelocityVariance)
 
-## [0.5.0] - 2025-02-28
+## [0.5.0] - 2026-02-28
 
 ### Added
 

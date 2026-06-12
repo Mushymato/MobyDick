@@ -84,7 +84,6 @@ internal sealed class LocationalFishTank : FishTankFurniture
             data.BackgroundTargetRect,
             boundingBox.Value
         );
-        ModEntry.Log($"foreground={foreground} background={background}");
 
         RespawnFish();
     }

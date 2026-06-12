@@ -106,3 +106,8 @@ Aside from the generic [item spawn fields](https://stardewvalleywiki.com/Modding
 | RepeatCount | int | 1 | How many times to repeat this particular query, rolling new results each time. |
 | TakeCount | int | -1 | How many items to take from the result, or -1 to take all. When used with RepeatCount, this is the amount to take on each repeat. |
 
+#### `mushymato.MobyDick_ReloadFishTank [tankId]+`
+
+This trigger action will reload tanks in the current location, which results in their `Fishes` list being reevaluated.
+
+If `tankId` is `"ALL"` then every tank is reloaded, otherwise only reload tanks with matching id.

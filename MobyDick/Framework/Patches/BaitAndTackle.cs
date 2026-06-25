@@ -78,8 +78,10 @@ internal static partial class Patches
         baitId = ApplyTargetOrInputItem(context, baitId);
         baitPreserveId = ApplyTargetOrInputItem(context, baitPreserveId);
 
-        SObject baitItem = fishingRod.GetBait();
+        SObject? baitItem = fishingRod.GetBait();
 
+        if (baitItem == null)
+            return false;
         if (baitId != null && baitItem.QualifiedItemId != baitId)
             return false;
         if (baitPreserveId != null && baitItem.preservedParentSheetIndex.Value != baitPreserveId)

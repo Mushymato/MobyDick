@@ -9,6 +9,7 @@ using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.ItemTypeDefinitions;
+using StardewValley.Locations;
 using StardewValley.Objects;
 using StardewValley.Tools;
 #if SDV17
@@ -103,6 +104,14 @@ internal static partial class Patches
             harmony.Patch(
                 original: AccessTools.DeclaredMethod(typeof(JumpingFish), nameof(JumpingFish.Draw)),
                 prefix: new HarmonyMethod(typeof(Patches), nameof(JumpingFish_Draw_Prefix)) { priority = Priority.Last }
+            );
+            // perfection slideshow
+            harmony.Patch(
+                original: AccessTools.DeclaredMethod(typeof(Summit), nameof(Summit.getEndSlideshow)),
+                transpiler: new HarmonyMethod(typeof(Patches), nameof(Summit_getEndSlideshow_Transpiler))
+                {
+                    priority = Priority.First,
+                }
             );
         }
         catch (Exception err)
@@ -215,6 +224,134 @@ internal static partial class Patches
     private static void OnRenderingActiveMenu(object? sender, RenderingActiveMenuEventArgs e) => IsInMenuDraw = true;
 
     private static void OnRenderedActiveMenu(object? sender, RenderedActiveMenuEventArgs e) => IsInMenuDraw = false;
+
+    private static IEnumerable<CodeInstruction> Summit_getEndSlideshow_Transpiler(
+        IEnumerable<CodeInstruction> instructions,
+        ILGenerator generator
+    )
+    {
+        try
+        {
+            CodeMatcher matcher = new(instructions, generator);
+
+            // IL_1d54: ldsfld class StardewValley.LocalizedContentManager StardewValley.Game1::content
+            // IL_1d59: call class [System.Collections]System.Collections.Generic.Dictionary`2<string, string> StardewValley.DataLoader::AquariumFish(class StardewValley.LocalizedContentManager)
+            matcher
+                .MatchEndForward([
+                    new(OpCodes.Ldsfld, AccessTools.DeclaredField(typeof(Game1), nameof(Game1.content))),
+                    new(OpCodes.Call, AccessTools.DeclaredMethod(typeof(DataLoader), nameof(DataLoader.AquariumFish))),
+                ])
+                .ThrowIfNotMatch("Failed to match 'DataLoader.AquariumFish(Game1.content)'");
+
+            // IL_1d93: ldstr "(O)"
+            // IL_1d98: ldloc.s 31
+            matcher
+                .MatchEndForward([new(OpCodes.Ldstr, "(O)"), new(inst => inst.IsLdloc())])
+                .ThrowIfNotMatch("Failed to match '\"(O)\" + key4'");
+
+            CodeInstruction ldlocKey = new(matcher.Opcode, matcher.Operand);
+
+            // IL_1dd0: ldstr "LooseSprites\\AquariumFish"
+            // IL_1dd5: ldc.i4.0
+            // IL_1dd6: call string StardewValley.ArgUtility::Get(string[], int32, string, bool)
+            // IL_1ddb: stloc.s 34
+            matcher
+                .MatchEndForward([
+                    new(OpCodes.Ldstr, "LooseSprites\\AquariumFish"),
+                    new(OpCodes.Ldc_I4_0),
+                    new(OpCodes.Call, AccessTools.DeclaredMethod(typeof(ArgUtility), nameof(ArgUtility.Get))),
+                    new(inst => inst.IsStloc()),
+                ])
+                .ThrowIfNotMatch("Failed to match 'textureName = ArgUtility.Get'")
+                .InsertAndAdvance([
+                    ldlocKey.Clone(),
+                    new(
+                        OpCodes.Call,
+                        AccessTools.DeclaredMethod(
+                            typeof(Patches),
+                            nameof(Summit_getEndSlideshow_Transpiler_GetTexture)
+                        )
+                    ),
+                ]);
+
+            // IL_1de6: ldloca.s 36
+            // IL_1de8: ldc.i4.s 24
+            // IL_1dea: ldloc.s 35
+            // IL_1dec: mul
+            // IL_1ded: ldc.i4 480
+            matcher
+                .MatchStartForward([
+                    new(OpCodes.Ldloca_S),
+                    new(OpCodes.Ldc_I4_S, (sbyte)24),
+                    new(inst => inst.IsLdloc()),
+                    new(OpCodes.Mul),
+                    new(OpCodes.Ldc_I4, 480),
+                    new(OpCodes.Rem),
+                ])
+                .ThrowIfNotMatch("Failed to match '24 * num7 % 480'");
+
+            CodeInstruction ldlocRect = new(OpCodes.Ldloc_S, matcher.Operand);
+            CodeInstruction stlocRect = new(OpCodes.Stloc_S, matcher.Operand);
+
+            // IL_1e01: ldc.i4.s 24
+            // IL_1e03: ldc.i4.s 24
+            // IL_1e05: call instance void [MonoGame.Framework]Microsoft.Xna.Framework.Rectangle::.ctor(int32, int32, int32, int32)
+            matcher
+                .MatchEndForward([
+                    new(OpCodes.Ldc_I4_S, (sbyte)24),
+                    new(OpCodes.Ldc_I4_S, (sbyte)24),
+                    new(
+                        OpCodes.Call,
+                        AccessTools.Constructor(typeof(Rectangle), [typeof(int), typeof(int), typeof(int), typeof(int)])
+                    ),
+                ])
+                .ThrowIfNotMatch("Failed to match 'new Rectangle(*, *, 24, 24)")
+                .Advance(1)
+                .InsertAndAdvance([
+                    ldlocRect,
+                    ldlocKey.Clone(),
+                    new(
+                        OpCodes.Call,
+                        AccessTools.DeclaredMethod(
+                            typeof(Patches),
+                            nameof(Summit_getEndSlideshow_Transpiler_GetSourceRect)
+                        )
+                    ),
+                    stlocRect,
+                ]);
+
+            return matcher.Instructions();
+        }
+        catch (Exception err)
+        {
+            ModEntry.Log($"Error in Summit_getEndSlideshow_Transpiler:\n{err}", LogLevel.Error);
+            return instructions;
+        }
+    }
+
+    private static string Summit_getEndSlideshow_Transpiler_GetTexture(string originalValue, string key)
+    {
+        if (AssetManager.TryGetFish(key, out MobyDickData? data))
+        {
+            return data.AquariumTextureOverride ?? originalValue;
+        }
+        return originalValue;
+    }
+
+    private static Rectangle Summit_getEndSlideshow_Transpiler_GetSourceRect(Rectangle originalValue, string key)
+    {
+        if (AssetManager.TryGetFish(key, out MobyDickData? data))
+        {
+            Rectangle result = new(
+                data.AquariumTextureRect.X,
+                data.AquariumTextureRect.Y,
+                data.SpriteSize.X,
+                data.SpriteSize.Y
+            );
+            return result;
+        }
+        return originalValue;
+    }
 
     private static void ColoredObject_drawSmokedFish_ReplaceVars(
         ColoredObject smokedFish,

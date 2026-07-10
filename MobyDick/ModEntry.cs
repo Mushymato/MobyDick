@@ -4,6 +4,7 @@ using HarmonyLib;
 using MobyDick.Framework;
 using MobyDick.Model;
 using StardewModdingAPI;
+using StardewValley;
 
 namespace MobyDick;
 
@@ -31,7 +32,20 @@ public sealed class ModEntry : Mod
         FishWatcher.Register(helper);
         GameDelegates.Register();
         LocationalFishTankManager.Register(helper);
+
+#if DEBUG
+        helper.ConsoleCommands.Add("md-testsummit", "Test summit", ConsoleTestSummit);
+#endif
     }
+
+#if DEBUG
+    private void ConsoleTestSummit(string arg1, string[] arg2)
+    {
+        Game1.player.mailReceived.Remove("Summit_event");
+        Game1.MasterPlayer.mailReceived.Add("Farm_Eternal");
+        Game1.player.team.farmPerfect.Value = true;
+    }
+#endif
 
     /// <summary>SMAPI static monitor Log wrapper</summary>
     /// <param name="msg"></param>

@@ -251,73 +251,64 @@ internal static partial class Patches
 
             CodeInstruction ldlocKey = new(matcher.Opcode, matcher.Operand);
 
-            // IL_1dd0: ldstr "LooseSprites\\AquariumFish"
-            // IL_1dd5: ldc.i4.0
-            // IL_1dd6: call string StardewValley.ArgUtility::Get(string[], int32, string, bool)
-            // IL_1ddb: stloc.s 34
+            // IL_1eb7: ldsfld class [System.Runtime]System.Random StardewValley.Game1::random
+            // IL_1ebc: ldc.i4 1500
+            // IL_1ec1: ldc.i4 2100
+            // IL_1ec6: callvirt instance int32 [System.Runtime]System.Random::Next(int32, int32)
+            // IL_1ecb: conv.r4
+            // IL_1ecc: stfld float32 StardewValley.TemporaryAnimatedSprite::yPeriodicLoopTime
+            // IL_1ed1: dup
+            // IL_1ed2: ldc.r4 4
+            // IL_1ed7: stfld float32 StardewValley.TemporaryAnimatedSprite::yPeriodicRange
+            // IL_1edc: callvirt instance void StardewValley.TemporaryAnimatedSpriteList::Add(class StardewValley.TemporaryAnimatedSprite)
+            // IL_1ee1: ldarg.0
             matcher
                 .MatchEndForward([
-                    new(OpCodes.Ldstr, "LooseSprites\\AquariumFish"),
-                    new(OpCodes.Ldc_I4_0),
-                    new(OpCodes.Call, AccessTools.DeclaredMethod(typeof(ArgUtility), nameof(ArgUtility.Get))),
-                    new(inst => inst.IsStloc()),
+                    new(OpCodes.Ldsfld, AccessTools.DeclaredField(typeof(Game1), nameof(Game1.random))),
+                    new(OpCodes.Ldc_I4, 1500),
+                    new(OpCodes.Ldc_I4, 2100),
+                    new(
+                        OpCodes.Callvirt,
+                        AccessTools.DeclaredMethod(typeof(Random), nameof(Random.Next), [typeof(int), typeof(int)])
+                    ),
+                    new(OpCodes.Conv_R4),
+                    new(
+                        OpCodes.Stfld,
+                        AccessTools.DeclaredField(
+                            typeof(TemporaryAnimatedSprite),
+                            nameof(TemporaryAnimatedSprite.yPeriodicLoopTime)
+                        )
+                    ),
+                    new(OpCodes.Dup),
+                    new(OpCodes.Ldc_R4, (float)4),
+                    new(
+                        OpCodes.Stfld,
+                        AccessTools.DeclaredField(
+                            typeof(TemporaryAnimatedSprite),
+                            nameof(TemporaryAnimatedSprite.yPeriodicRange)
+                        )
+                    ),
+                    new(
+                        OpCodes.Callvirt,
+                        AccessTools.DeclaredMethod(
+                            typeof(TemporaryAnimatedSpriteList),
+                            nameof(TemporaryAnimatedSpriteList.Add)
+                        )
+                    ),
+                    new(OpCodes.Ldarg_0),
                 ])
-                .ThrowIfNotMatch("Failed to match 'textureName = ArgUtility.Get'")
+                .ThrowIfNotMatch("Failed to match 'base.TemporarySprites.Add(new TemporaryAnimatedSprite'")
                 .InsertAndAdvance([
+                    new(OpCodes.Ldarg_0),
+                    new(
+                        OpCodes.Call,
+                        AccessTools.PropertyGetter(typeof(GameLocation), nameof(GameLocation.TemporarySprites))
+                    ),
                     ldlocKey.Clone(),
                     new(
                         OpCodes.Call,
-                        AccessTools.DeclaredMethod(
-                            typeof(Patches),
-                            nameof(Summit_getEndSlideshow_Transpiler_GetTexture)
-                        )
+                        AccessTools.DeclaredMethod(typeof(Patches), nameof(Summit_getEndSlideshow_Transpiler_ModifyTAS))
                     ),
-                ]);
-
-            // IL_1de6: ldloca.s 36
-            // IL_1de8: ldc.i4.s 24
-            // IL_1dea: ldloc.s 35
-            // IL_1dec: mul
-            // IL_1ded: ldc.i4 480
-            matcher
-                .MatchStartForward([
-                    new(OpCodes.Ldloca_S),
-                    new(OpCodes.Ldc_I4_S, (sbyte)24),
-                    new(inst => inst.IsLdloc()),
-                    new(OpCodes.Mul),
-                    new(OpCodes.Ldc_I4, 480),
-                    new(OpCodes.Rem),
-                ])
-                .ThrowIfNotMatch("Failed to match '24 * num7 % 480'");
-
-            CodeInstruction ldlocRect = new(OpCodes.Ldloc_S, matcher.Operand);
-            CodeInstruction stlocRect = new(OpCodes.Stloc_S, matcher.Operand);
-
-            // IL_1e01: ldc.i4.s 24
-            // IL_1e03: ldc.i4.s 24
-            // IL_1e05: call instance void [MonoGame.Framework]Microsoft.Xna.Framework.Rectangle::.ctor(int32, int32, int32, int32)
-            matcher
-                .MatchEndForward([
-                    new(OpCodes.Ldc_I4_S, (sbyte)24),
-                    new(OpCodes.Ldc_I4_S, (sbyte)24),
-                    new(
-                        OpCodes.Call,
-                        AccessTools.Constructor(typeof(Rectangle), [typeof(int), typeof(int), typeof(int), typeof(int)])
-                    ),
-                ])
-                .ThrowIfNotMatch("Failed to match 'new Rectangle(*, *, 24, 24)")
-                .Advance(1)
-                .InsertAndAdvance([
-                    ldlocRect,
-                    ldlocKey.Clone(),
-                    new(
-                        OpCodes.Call,
-                        AccessTools.DeclaredMethod(
-                            typeof(Patches),
-                            nameof(Summit_getEndSlideshow_Transpiler_GetSourceRect)
-                        )
-                    ),
-                    stlocRect,
                 ]);
 
             return matcher.Instructions();
@@ -329,28 +320,60 @@ internal static partial class Patches
         }
     }
 
-    private static string Summit_getEndSlideshow_Transpiler_GetTexture(string originalValue, string key)
+    private static void Summit_getEndSlideshow_Transpiler_ModifyTAS(TemporaryAnimatedSpriteList tasList, string key)
     {
-        if (AssetManager.TryGetFish(key, out MobyDickData? data))
-        {
-            return data.AquariumTextureOverride ?? originalValue;
-        }
-        return originalValue;
-    }
+        if (tasList.Count == 0)
+            return;
+        if (!AssetManager.TryGetFish(key, out MobyDickData? data))
+            return;
 
-    private static Rectangle Summit_getEndSlideshow_Transpiler_GetSourceRect(Rectangle originalValue, string key)
-    {
-        if (AssetManager.TryGetFish(key, out MobyDickData? data))
+        TemporaryAnimatedSprite lastTAS = tasList.Last();
+        if (data.AquariumTextureOverride != null)
         {
-            Rectangle result = new(
+            lastTAS.textureName = data.AquariumTextureOverride;
+            lastTAS.texture = Game1.content.Load<Texture2D>(lastTAS.textureName);
+        }
+        if (
+            (data.SwimAnimation ?? data.AquariumFish?.IdleAnimation ?? data.AquariumFish?.DartHoldAnimation)
+                is List<int> fishAnim
+            && fishAnim.Count > 0
+        )
+        {
+            if (ShouldAnimate(fishAnim))
+            {
+                lastTAS.initialParentTileIndex = fishAnim[0];
+                lastTAS.animationLength = fishAnim[^1] - fishAnim[0] + 1;
+                lastTAS.interval = data.SwimAnimationInterval;
+                lastTAS.sourceRect = data.GetAquariumSourceRect(
+                    data.AquariumTextureRect.IsEmpty ? lastTAS.texture.Bounds : data.AquariumTextureRect,
+                    lastTAS.initialParentTileIndex
+                );
+            }
+        }
+        else
+        {
+            lastTAS.sourceRect = new(
                 data.AquariumTextureRect.X,
                 data.AquariumTextureRect.Y,
                 data.SpriteSize.X,
                 data.SpriteSize.Y
             );
-            return result;
         }
-        return originalValue;
+        lastTAS.sourceRectStartingPos = new Vector2(lastTAS.sourceRect.X, lastTAS.sourceRect.Y);
+
+        static bool ShouldAnimate(List<int>? fishAnim)
+        {
+            if (fishAnim == null || fishAnim.Count == 0)
+                return false;
+
+            for (int i = 1; i < fishAnim.Count; i++)
+            {
+                if (fishAnim[i] != fishAnim[i - 1] + 1)
+                    return false;
+            }
+
+            return true;
+        }
     }
 
     private static void ColoredObject_drawSmokedFish_ReplaceVars(

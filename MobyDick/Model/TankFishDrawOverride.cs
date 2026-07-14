@@ -82,7 +82,12 @@ internal sealed record TankFishDrawOverride(TankFish Fish, MobyDickData Data, Te
             Vector2 wiggleOrigin = new((Fish.facingLeft ? -1 : 1) * origin.X, origin.Y);
             for (int i = 0; i < sourceRect.Width / wiggleLen; i++)
             {
-                float wiggleX = i * wiggleLen * (Fish.facingLeft ? -1 : 1);
+                float wiggleX = i * wiggleLen;
+                if (Fish.facingLeft)
+                {
+                    wiggleX += wiggleLen;
+                    wiggleX *= -1;
+                }
 
                 float num10 = (float)(i * wiggleLen) / (isEel ? 20f : 10f);
                 num10 = 1f - num10;

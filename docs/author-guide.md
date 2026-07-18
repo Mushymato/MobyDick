@@ -81,6 +81,8 @@ To check that you have a particular bait equipped:
 
 This is a way to create decorative fish tanks in the map. These are not furniture in any way and fish inside cannot be accessed by the player.
 
+To add these to a location, put a space separated list of tanks in `mushymato.MobyDick_FishTanks` map property or location custom field.
+
 | Field | Type | Default | Description |
 | ----- | ---- | ------- | ----------- |
 | DrawInBackground | bool | `false` | Whether this tank should be drawn behind all map layers. |

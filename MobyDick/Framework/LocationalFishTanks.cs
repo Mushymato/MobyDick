@@ -11,6 +11,9 @@ using StardewValley.Internal;
 using StardewValley.Mods;
 using StardewValley.Objects;
 using StardewValley.Triggers;
+#if SDV17
+using StardewValley.Objects.FishTanks;
+#endif
 
 namespace MobyDick.Framework;
 
@@ -145,6 +148,46 @@ internal sealed class LocationalFishTank : FishTankFurniture
             drawLayer += drawLayer += 1E-07f * i;
             tankFish.Draw(spriteBatch, alpha, drawLayer);
         }
+#if SDV17
+        SpriteEffects spriteEffectsWhenPlaced = GetSpriteEffectsWhenPlaced();
+        foreach (TankDecoration decoration in decorations)
+        {
+            float layerDepth = Utility.Lerp(fishSortRegion.Y, fishSortRegion.X, decoration.Position.Y / 20f) - 1E-06f;
+            Vector2 position = Game1.GlobalToLocal(
+                new Vector2(
+                    tankBounds.Left + decoration.Position.X * 4f,
+                    tankBounds.Bottom - 4 - decoration.Position.Y * 4f
+                )
+            );
+            if (decoration.Texture == null)
+            {
+                Utility.DrawErrorTexture(
+                    spriteBatch,
+                    new Rectangle(
+                        (int)position.X,
+                        (int)position.Y,
+                        decoration.SourceRect.Width,
+                        decoration.SourceRect.Height
+                    ),
+                    layerDepth
+                );
+            }
+            else
+            {
+                spriteBatch.Draw(
+                    decoration.Texture,
+                    position,
+                    decoration.SourceRect,
+                    Color.White * alpha,
+                    0f,
+                    new Vector2(decoration.SourceRect.Width / 2, decoration.SourceRect.Height - 4),
+                    4f,
+                    spriteEffectsWhenPlaced,
+                    layerDepth
+                );
+            }
+        }
+#else
         for (int j = 0; j < floorDecorations.Count; j++)
         {
             KeyValuePair<Rectangle, Vector2>? floorDeco = floorDecorations[j];
@@ -168,6 +211,8 @@ internal sealed class LocationalFishTank : FishTankFurniture
                 );
             }
         }
+#endif
+
         if (data.DrawBubbles)
         {
             foreach (Vector4 bubble in bubbles)

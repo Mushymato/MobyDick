@@ -9,5 +9,6 @@ internal static partial class Patches
     {
         Patch_Drawing(helper, harmony);
         Patch_BaitAndTackle(harmony);
+        Patch_Minigame(harmony);
     }
 }

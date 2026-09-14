@@ -2,9 +2,11 @@ global using SObject = StardewValley.Object;
 using System.Diagnostics;
 using HarmonyLib;
 using MobyDick.Framework;
+using MobyDick.Framework.AltFishing;
 using MobyDick.Model;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Tools;
 
 namespace MobyDick;
 
@@ -18,10 +20,12 @@ public sealed class ModEntry : Mod
 
     public const string ModId = "mushymato.MobyDick";
     private static IMonitor? mon;
+    internal static IModHelper help = null!;
 
     public override void Entry(IModHelper helper)
     {
         mon = Monitor;
+        help = helper;
 
         DynamicMethods.Make();
 
@@ -35,6 +39,7 @@ public sealed class ModEntry : Mod
 
 #if DEBUG
         helper.ConsoleCommands.Add("md-testsummit", "Test summit", ConsoleTestSummit);
+        helper.ConsoleCommands.Add("md-testdredge", "Test dredge", ConsoleTestDredge);
 #endif
     }
 
@@ -44,6 +49,30 @@ public sealed class ModEntry : Mod
         Game1.player.mailReceived.Remove("Summit_event");
         Game1.MasterPlayer.mailReceived.Add("Farm_Eternal");
         Game1.player.team.farmPerfect.Value = true;
+    }
+
+    private void ConsoleTestDredge(string arg1, string[] arg2)
+    {
+        if (Game1.activeClickableMenu != null)
+        {
+            Game1.activeClickableMenu = null;
+            return;
+        }
+        if (Game1.player.CurrentTool is FishingRod fishingRod)
+        {
+            Game1.activeClickableMenu = new DredgeBar(
+                "(O)142",
+                0.5f,
+                treasure: true,
+                fishingRod.GetTackleQualifiedItemIDs(),
+                null,
+                isBossFish: false
+            );
+        }
+        else
+        {
+            Log("The player must have a fishing rod equipped to use this command.", LogLevel.Error);
+        }
     }
 #endif
 

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://smapi.io/schemas/content-patcher.json",
+  "Format": "2.9.0",
+  "Changes": [
+    {
+      "Action": "EditData",
+      "Target": "Data/Locations",
+      "Fields": {
+        "Forest": {
+          "Fish": [
+            {
+              "Chance": 1.0,
+              "Id": "(O)795",
+              "ItemId": "(O)795",
+              "Precedence": -110,
+            }
+          ]
+        }
+      }
+    },
+    {
+      "Action": "EditData",
+      "Target": "Data/Tools",
+      "Entries": {
+        "{{ModId}}_Rod": {
+          "ClassName": "FishingRod",
+          "Name": "{{ModId}}_Rod",
+          "AttachmentSlots": 3,
+          "SalePrice": 30000,
+          "DisplayName": "{{ModId}}_Rod",
+          "Description": "{{ModId}}_Rod",
+          "Texture": "TileSheets\\tools",
+          "SpriteIndex": 17,
+          "MenuSpriteIndex": -1,
+          "UpgradeLevel": 4,
+          "ConventionalUpgradeFrom": null,
+          "UpgradeFrom": null,
+          "CanBeLostOnDeath": false,
+          "SetProperties": null,
+          "ModData": null,
+          "CustomFields": {
+            "mushymato.MobyDick/AltFishing": "Dredge"
+          }
+        },
+      }
+    }
+  ]
+}

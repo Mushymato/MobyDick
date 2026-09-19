@@ -1,4 +1,5 @@
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.Menus;
@@ -16,13 +17,18 @@ public sealed class DredgeBar : BobberBar
 {
     private readonly double healthMax;
     private double health;
+    private readonly double regen;
+    private readonly double attack;
     private double hookPos = 0.5;
     private double fishPos = 0;
     private double treasurePos = -1;
     private bool hasSonar = true;
     private float fade = 0f;
+    private double hookTimer = 0;
     private double healthChange;
     private double healthChangeTimer = 0;
+    private double fishEscapeTimer = -1;
+    private double fishAppearTimer = FISH_APPEAR_TIMER_MAX;
 
     #region ui consts
     private const float SCALE = 4f;
@@ -31,6 +37,9 @@ public sealed class DredgeBar : BobberBar
     private const float HEALTH_BAR_MARGIN_Y = 4 * SCALE;
     private const float ROD_BAR_MARGIN_X = 3 * SCALE;
     private const double HEATLTH_CHANGE_TIMER_MAX = 200;
+    private const double REGEN_TIMER_BASE = 300;
+    private const double FISH_APPEAR_TIMER_MAX = 200;
+    private const double FISH_ESCAPE_TIMER_MAX = 2000;
     private readonly Texture2D minigameTx;
     private static Rectangle rectHealthBarOverlay = new(0, 0, 176, 16);
     private static Rectangle rectHealthBar = new(0, 16, 176, 16);
@@ -45,6 +54,7 @@ public sealed class DredgeBar : BobberBar
     private static Rectangle rectRodIconFishKing = new(96, 80, 32, 32);
     private static Rectangle rectRodIconTreasure = new(128, 80, 32, 32);
     private static Rectangle rectRodIconTreasureGolden = new(160, 80, 32, 32);
+    private static Color Greeeen = Utility.getRedToGreenLerpColor(1.0f);
     #endregion
 
     internal static IClickableMenu FromBobberBar(BobberBar bobberBar)
@@ -73,13 +83,14 @@ public sealed class DredgeBar : BobberBar
     )
         : base(whichFish, fishSize, treasure, bobbers, setFlagOnCatch, isBossFish, baitID, goldenTreasure)
     {
-        this.healthMax = this.difficulty * 3;
-        this.health = this.healthMax;
-        ModEntry.Log($"DredgeBar {this.health}");
+        healthMax = difficulty * 2;
+        health = healthMax;
+        regen = Math.Max(REGEN_TIMER_BASE - difficulty, 100);
+        attack = 12 + Game1.player.FishingLevel;
+        ModEntry.Log($"DredgeBar health={health} attack={attack}");
         minigameTx = ModEntry.help!.ModContent.Load<Texture2D>("assets/minigame.png");
         fishPos = RandP05ToP95();
         treasurePos = RandP05ToP95();
-        SetHookPos();
     }
 
     private static double RandP05ToP95()
@@ -110,48 +121,101 @@ public sealed class DredgeBar : BobberBar
             fade -= 0.1f;
             if (fade <= 0f)
             {
+                unReelSound?.Stop(AudioStopOptions.Immediate);
+                reelSound?.Stop(AudioStopOptions.Immediate);
+                unReelSound = null;
+                reelSound = null;
                 scale = 0f;
                 everythingShakeTimer = 0f;
                 sparkleText = null;
-                distanceFromCatching = 1f;
                 base.update(time);
             }
         }
-        if (!fadeOut)
+        if (!fadeOut && !handledFishResult)
         {
+            if (fishAppearTimer > 0)
+            {
+                fishAppearTimer -= time.ElapsedGameTime.TotalMilliseconds;
+            }
             Reposition();
-            // hook
-            SetHookPos();
             if (healthChangeTimer > 0)
             {
                 healthChangeTimer -= time.ElapsedGameTime.TotalMilliseconds;
+                unReelSound?.Stop(AudioStopOptions.Immediate);
+                if (reelSound == null || reelSound.IsStopped || reelSound.IsStopping || !reelSound.IsPlaying)
+                {
+                    ModEntry.Log($"{Game1.ticks} unReelSound");
+                    Game1.playSound("fastReel", out reelSound);
+                }
                 if (healthChangeTimer <= 0)
                 {
+                    reelSound?.Stop(AudioStopOptions.Immediate);
                     ChangeFishHealth(healthChange);
                     healthChange = 0;
+                    fishAppearTimer = FISH_APPEAR_TIMER_MAX;
+                }
+            }
+            else
+            {
+                reelSound?.Stop(AudioStopOptions.Immediate);
+                if (unReelSound == null || unReelSound.IsStopped)
+                {
+                    ModEntry.Log($"{Game1.ticks} unReelSound");
+                    Game1.playSound("slowReel", out unReelSound);
+                }
+                if (health < healthMax)
+                {
+                    ChangeFishHealth(time.ElapsedGameTime.TotalMilliseconds / regen);
+                }
+                // fish escaping
+                if (fishEscapeTimer > 0)
+                {
+                    fishEscapeTimer -= time.ElapsedGameTime.TotalMilliseconds;
+                    if (fishEscapeTimer <= 0)
+                    {
+                        // escaped
+                        SetFishResult(false);
+                    }
                 }
             }
             Game1.player.CurrentTool?.tickUpdate(time, Game1.player);
+            // hook
+            SetHookPos(time);
         }
     }
 
-    private void SetHookPos()
+    private void SetFishResult(bool caught)
     {
-        double theta = Game1.currentGameTime.TotalGameTime.TotalMilliseconds / 1200.0;
-        hookPos = 0.5 + Math.Sin(Math.PI * theta) / 2.0;
+        distanceFromCatching = caught ? 1f : 0f;
+        fadeOut = true;
+        handledFishResult = true;
+        fishEscapeTimer = 0.001;
+    }
+
+    private void SetHookPos(GameTime time)
+    {
+        hookTimer += time.ElapsedGameTime.TotalMilliseconds;
+        double theta = hookTimer / 1200.0;
+        hookPos = 0.5 + Math.Cos(Math.PI * (theta + 1)) / 2.0;
+    }
+
+    private bool WouldHook()
+    {
+        return Math.Abs(hookPos - fishPos) <= 0.1;
     }
 
     public override void receiveLeftClick(int x, int y, bool playSound = true)
     {
-        if (healthChange == 0)
+        if (healthChange == 0 && WouldHook())
         {
-            if (Math.Abs(hookPos - fishPos) <= 0.1)
+            if (WouldHook())
             {
-                StartChangeFishHealth(-15);
+                Game1.playSound("jingle1");
+                StartChangeFishHealth(-(attack + Random.Shared.Next(8)));
             }
             else
             {
-                // StartChangeFishHealth(15);
+                perfect = false;
             }
         }
     }
@@ -172,22 +236,21 @@ public sealed class DredgeBar : BobberBar
             healthChange = change;
             fishPos = RandP05ToP95();
         }
-        ModEntry.Log($"Fish will change {health} + {change} = {healthAfterChange}");
+        ModEntry.Log($"Fish will change by {change}: {health} + {healthChange} = {healthAfterChange}");
         if (healthChange != 0)
+        {
             healthChangeTimer = HEATLTH_CHANGE_TIMER_MAX;
+        }
     }
 
     public void ChangeFishHealth(double change)
     {
-        ModEntry.Log($"Fish {health} + {change}");
         health += change;
         if (health <= 0)
         {
             // caught
             Game1.playSound("jingle1");
-            distanceFromCatching = 1f;
-            fadeOut = true;
-            handledFishResult = true;
+            SetFishResult(true);
             if (perfect)
             {
                 // sparkleText = new SparklingText(
@@ -211,15 +274,13 @@ public sealed class DredgeBar : BobberBar
         }
         else if (health >= healthMax)
         {
-            // escaped
-            Game1.playSound("fishEscape");
-            distanceFromCatching = 0f;
-            fadeOut = true;
-            handledFishResult = true;
-        }
-        if (change > 0)
-        {
+            // escaping
+            fishEscapeTimer = FISH_ESCAPE_TIMER_MAX;
             perfect = false;
+        }
+        else
+        {
+            fishEscapeTimer = -1;
         }
     }
 
@@ -233,6 +294,8 @@ public sealed class DredgeBar : BobberBar
     {
         Game1.StartWorldDrawInUI(b);
 
+        bool changingHeath = healthChangeTimer > 0;
+
         Vector2 pos = new(xPositionOnScreen, yPositionOnScreen);
 
         // health bar
@@ -241,7 +304,11 @@ public sealed class DredgeBar : BobberBar
             minigameTx,
             new(pos.X + HEALTH_BAR_MARGIN_X, pos.Y + HEALTH_BAR_MARGIN_Y),
             rectHealthBarFill,
-            Color.White * fade,
+            (
+                fishEscapeTimer >= 0
+                    ? Utility.getRedToGreenLerpColor((float)(fishEscapeTimer / FISH_ESCAPE_TIMER_MAX))
+                    : Greeeen
+            ) * fade,
             0f,
             Vector2.Zero,
             new Vector2(
@@ -264,7 +331,7 @@ public sealed class DredgeBar : BobberBar
         {
             Vector2 sonarPos = new(pos.X + (rectRodBar.Width - 4) * SCALE, pos.Y);
             DrawMinigamePart(b, sonarPos, rectSonarPanel);
-            fishObject.drawInMenu(b, new(sonarPos.X + 24, sonarPos.Y + 16), 1f);
+            fishObject.drawInMenu(b, new(sonarPos.X + 36, sonarPos.Y + 16), 1f);
         }
 
         // fish & treasure bars
@@ -279,14 +346,20 @@ public sealed class DredgeBar : BobberBar
                 layerDepth: 0.91f
             );
         }
-        Vector2 fishPosVec = BarPosToVec(pos, fishPos);
-        DrawMinigamePartCentered(b, fishPosVec, rectRodFish, layerDepth: 0.915f);
+        Vector2 fishPosVec = Vector2.Zero;
+        float fishAppearAlpha = (float)(
+            fishAppearTimer > 0 ? ((FISH_APPEAR_TIMER_MAX - fishAppearTimer) / FISH_APPEAR_TIMER_MAX) : 1f
+        );
+        if (!changingHeath)
+        {
+            fishPosVec = BarPosToVec(pos, fishPos);
+            DrawMinigamePartCentered(b, fishPosVec, rectRodFish, layerDepth: 0.915f, alpha: fishAppearAlpha);
+        }
 
         // hook
         DrawMinigamePartCentered(b, BarPosToVec(pos, hookPos), rectRodHook, layerDepth: 0.92f);
 
         // fish icon
-        bool wouldHit = Math.Abs(hookPos - fishPos) <= 0.1;
         if (!treasureCaught)
         {
             DrawMinigamePartCentered(
@@ -297,13 +370,17 @@ public sealed class DredgeBar : BobberBar
                 layerDepth: 0.93f
             );
         }
-        DrawMinigamePartCentered(
-            b,
-            fishPosVec,
-            bossFish ? rectRodIconFishKing : rectRodIconFish,
-            drawScale: wouldHit ? 3f : 2f,
-            layerDepth: 0.935f
-        );
+        if (!changingHeath)
+        {
+            DrawMinigamePartCentered(
+                b,
+                fishPosVec,
+                bossFish ? rectRodIconFishKing : rectRodIconFish,
+                drawScale: WouldHook() ? 3f : 2f,
+                layerDepth: 0.935f,
+                alpha: fishAppearAlpha
+            );
+        }
 
         Game1.EndWorldDrawInUI(b);
     }
@@ -313,10 +390,21 @@ public sealed class DredgeBar : BobberBar
         Vector2 pos,
         Rectangle rect,
         float drawScale = SCALE,
-        float layerDepth = 0.9f
+        float layerDepth = 0.9f,
+        float alpha = 1f
     )
     {
-        b.Draw(minigameTx, pos, rect, Color.White * fade, 0f, Vector2.Zero, drawScale, SpriteEffects.None, layerDepth);
+        b.Draw(
+            minigameTx,
+            pos,
+            rect,
+            Color.White * fade * alpha,
+            0f,
+            Vector2.Zero,
+            drawScale,
+            SpriteEffects.None,
+            layerDepth
+        );
     }
 
     private void DrawMinigamePartCentered(
@@ -324,14 +412,15 @@ public sealed class DredgeBar : BobberBar
         Vector2 pos,
         Rectangle rect,
         float drawScale = SCALE,
-        float layerDepth = 0.9f
+        float layerDepth = 0.9f,
+        float alpha = 1f
     )
     {
         b.Draw(
             minigameTx,
             pos,
             rect,
-            Color.White * fade,
+            Color.White * fade * alpha,
             0f,
             new Vector2(rect.Width / 2, rect.Height / 2),
             drawScale,

@@ -1,0 +1,17 @@
+{
+  "Name": "[🎣] Rod",
+  "Author": "debug",
+  "Version": "1.0.0",
+  "Description": "custom rod",
+  "UniqueID": "debug.Rod",
+  "MinimumApiVersion": "4.3.0",
+  "UpdateKeys": [],
+  "ContentPackFor": {
+    "UniqueID": "Pathoschild.ContentPatcher"
+  },
+  "Dependencies": [
+    {
+      "UniqueID": "mushymato.MobyDick"
+    }
+  ]
+}

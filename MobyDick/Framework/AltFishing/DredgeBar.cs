@@ -43,7 +43,7 @@ public sealed class DredgeBar : BobberBar
     private const float HEALTH_BAR_MARGIN_X = 3 * SCALE;
     private const float HEALTH_BAR_MARGIN_Y = 4 * SCALE;
     private const float ROD_BAR_MARGIN_X = 3 * SCALE;
-    private const double FISH_POS_TIMER_MAX = 1500;
+    private const double FISH_POS_TIMER_MAX = 1200;
     private const double FISH_POS_TIMER_MAX_QUART = FISH_POS_TIMER_MAX * 0.75;
     private const double REGEN_TIMER_BASE = 250;
     private const double HEATLTH_CHANGE_TIMER_MAX = 300;
@@ -99,9 +99,8 @@ public sealed class DredgeBar : BobberBar
     {
         healthMax = difficulty * 2;
         health = healthMax;
-        regen = Math.Max(REGEN_TIMER_BASE - difficulty, 50);
+        regen = Math.Max(REGEN_TIMER_BASE - (difficulty * 1.5), 50);
         attack = 12 + Game1.player.FishingLevel;
-        hookLeeway += Game1.player.FishingLevel / 10.0 * 0.04;
         if (baitID == "(O)DeluxeBait")
         {
             attack += 6;

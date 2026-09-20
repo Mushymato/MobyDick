@@ -9,9 +9,9 @@
         "Forest": {
           "Fish": [
             {
-              "Chance": 1.0,
-              "Id": "(O)795",
-              "ItemId": "(O)795",
+              "Chance": 1000.0,
+              "Id": "(O)145",
+              "ItemId": "(O)145",
               "Precedence": -110,
             }
           ]

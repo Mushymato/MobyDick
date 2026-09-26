@@ -98,12 +98,12 @@ public sealed class DredgeBar : BobberBar
         : base(whichFish, fishSize, treasure, bobbers, setFlagOnCatch, isBossFish, baitID, goldenTreasure)
     {
         healthMax = difficulty * 2;
-        health = healthMax;
+        health = healthMax - 1;
         regen = Math.Max(REGEN_TIMER_BASE - (difficulty * 1.5), 50);
         attack = 12 + Game1.player.FishingLevel;
         if (baitID == "(O)DeluxeBait")
         {
-            attack += 6;
+            attack += 4;
         }
         ModEntry.Log(
             $"DredgeBar health={health} attack={attack} regen={regen} fishQuality={fishQuality} fishSize={fishSize}"
@@ -386,6 +386,7 @@ public sealed class DredgeBar : BobberBar
             {
                 Game1.playSound("dwoop");
                 NotPerfect();
+                StartChangeFishHealth(8 + Random.Shared.Next((int)(difficulty / 2)));
             }
             if (WouldHookTreasure())
             {
@@ -399,7 +400,7 @@ public sealed class DredgeBar : BobberBar
         double healthAfterChange = health + change;
         if (healthAfterChange > healthMax)
         {
-            healthChange = healthMax - change;
+            healthChange = Math.Min(0, healthMax - change);
         }
         else if (healthAfterChange < 0)
         {
